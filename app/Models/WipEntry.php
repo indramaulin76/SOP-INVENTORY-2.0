@@ -15,6 +15,7 @@ class WipEntry extends Model
         'tanggal',
         'nomor_faktur',
         'supplier_id',
+        'department_id',
         'keterangan',
         'total_nilai',
     ];
@@ -30,6 +31,14 @@ class WipEntry extends Model
     public function supplier(): BelongsTo
     {
         return $this->belongsTo(Supplier::class);
+    }
+
+    /**
+     * Get the department.
+     */
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class);
     }
 
     /**

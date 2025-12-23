@@ -13,7 +13,6 @@ const form = useForm({
     category_id: '',
     unit_id: '',
     limit_stock: 0,
-    harga_jual_default: 0, // Optional selling price
 });
 
 const submit = () => {
@@ -146,53 +145,27 @@ const submit = () => {
                             </div>
                         </div>
 
-                        <!-- Limit Stock & Harga Jual (Grid) -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- Limit Stock -->
-                            <div class="space-y-1">
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300" for="limit_stock">
-                                    Limit Stock <span class="text-red-500">*</span>
-                                </label>
-                                <div class="relative rounded-md shadow-sm">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <span class="material-symbols-outlined text-gray-400 text-sm">warning</span>
-                                    </div>
-                                    <input 
-                                        v-model="form.limit_stock"
-                                        class="block w-full pl-10 pr-3 py-2.5 border-gray-300 rounded-lg focus:ring-primary focus:border-primary text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white" 
-                                        id="limit_stock" 
-                                        type="number"
-                                        min="0"
-                                        placeholder="0" 
-                                        required
-                                    />
+                        <!-- Limit Stock -->
+                        <div class="space-y-1">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300" for="limit_stock">
+                                Limit Stock <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative rounded-md shadow-sm">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <span class="material-symbols-outlined text-gray-400 text-sm">warning</span>
                                 </div>
-                                <p v-if="form.errors.limit_stock" class="text-xs text-red-500 mt-1">{{ form.errors.limit_stock }}</p>
-                                <p class="text-xs text-gray-400 mt-1">Batas minimal untuk peringatan restock</p>
+                                <input 
+                                    v-model="form.limit_stock"
+                                    class="block w-full pl-10 pr-3 py-2.5 border-gray-300 rounded-lg focus:ring-primary focus:border-primary text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white" 
+                                    id="limit_stock" 
+                                    type="number"
+                                    min="0"
+                                    placeholder="0" 
+                                    required
+                                />
                             </div>
-
-                            <!-- Harga Jual -->
-                            <div class="space-y-1">
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300" for="harga_jual_default">
-                                    Harga Jual <span class="text-gray-400 text-xs">(Opsional)</span>
-                                </label>
-                                <div class="relative rounded-md shadow-sm">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <span class="text-gray-400 text-sm">Rp</span>
-                                    </div>
-                                    <input 
-                                        v-model="form.harga_jual_default"
-                                        class="block w-full pl-10 pr-3 py-2.5 border-gray-300 rounded-lg focus:ring-primary focus:border-primary text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white" 
-                                        id="harga_jual_default" 
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        placeholder="0" 
-                                    />
-                                </div>
-                                <p v-if="form.errors.harga_jual_default" class="text-xs text-red-500 mt-1">{{ form.errors.harga_jual_default }}</p>
-                                <p class="text-xs text-gray-400 mt-1">Default harga jual per satuan</p>
-                            </div>
+                            <p v-if="form.errors.limit_stock" class="text-xs text-red-500 mt-1">{{ form.errors.limit_stock }}</p>
+                            <p class="text-xs text-gray-400 mt-1">Batas minimal untuk peringatan restock</p>
                         </div>
 
                         <!-- Info Box -->

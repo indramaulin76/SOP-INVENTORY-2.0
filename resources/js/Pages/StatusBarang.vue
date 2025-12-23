@@ -71,6 +71,25 @@ const getProgressWidth = (stok, limit) => {
     const percentage = limit > 0 ? Math.min((stok / (limit * 3)) * 100, 100) : 100;
     return `${percentage}%`;
 };
+
+// Export functions
+const exportPdf = () => {
+    const params = new URLSearchParams();
+    if (search.value) params.append('search', search.value);
+    if (categoryId.value) params.append('category_id', categoryId.value);
+    if (statusFilter.value) params.append('status', statusFilter.value);
+    
+    window.location.href = route('laporan.export.status-barang.pdf') + '?' + params.toString();
+};
+
+const exportExcel = () => {
+    const params = new URLSearchParams();
+    if (search.value) params.append('search', search.value);
+    if (categoryId.value) params.append('category_id', categoryId.value);
+    if (statusFilter.value) params.append('status', statusFilter.value);
+    
+    window.location.href = route('laporan.export.status-barang.excel') + '?' + params.toString();
+};
 </script>
 
 
@@ -106,21 +125,31 @@ const getProgressWidth = (stok, limit) => {
             </nav>
 
             <!-- Header Card -->
-            <div class="bg-white dark:bg-surface-dark rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 mb-8 transition-colors flex flex-col md:flex-row justify-between items-center relative overflow-hidden">
-                <div class="absolute left-0 top-0 bottom-0 w-2 bg-primary"></div>
-                <div class="flex flex-col gap-1 z-10 pl-2">
-                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Status & Monitoring Stok</h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Monitor level stok dan nilai aset secara real-time</p>
-                </div>
-                <div class="flex items-center gap-3 mt-4 md:mt-0 z-10">
-                    <button class="flex items-center gap-1 bg-white border border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 px-4 py-2 rounded-md text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium">
-                        <span class="material-symbols-outlined text-sm">print</span>
-                        <span class="hidden sm:inline">Print Report</span>
-                    </button>
-                    <button class="flex items-center gap-1 bg-primary border border-transparent text-white px-4 py-2 rounded-md text-sm hover:bg-primary-hover transition-colors font-medium shadow-sm">
-                        <span class="material-symbols-outlined text-sm">table_view</span>
-                        <span class="hidden sm:inline">Export Excel</span>
-                    </button>
+            <div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-8">
+                <div class="bg-primary px-6 py-4 flex justify-between items-center text-white">
+                    <div class="flex items-center">
+                        <span class="material-symbols-outlined mr-3">monitoring</span>
+                        <div>
+                            <h2 class="text-lg font-semibold">Status & Monitoring Stok</h2>
+                            <p class="text-xs text-white/70">Monitor level stok dan nilai aset secara real-time</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button 
+                            @click="exportPdf"
+                            class="bg-white/20 hover:bg-white/30 text-white p-1.5 rounded transition-colors" 
+                            title="Export PDF"
+                        >
+                            <span class="material-symbols-outlined text-xl">picture_as_pdf</span>
+                        </button>
+                        <button 
+                            @click="exportExcel"
+                            class="bg-white/20 hover:bg-white/30 text-white p-1.5 rounded transition-colors" 
+                            title="Export Excel"
+                        >
+                            <span class="material-symbols-outlined text-xl">table_view</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 

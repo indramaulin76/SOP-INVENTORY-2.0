@@ -41,6 +41,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/barang', [\App\Http\Controllers\ProductController::class, 'create'])->name('input-data.barang');
         Route::get('/supplier', [\App\Http\Controllers\SupplierController::class, 'create'])->name('input-data.supplier');
         Route::get('/customer', [\App\Http\Controllers\CustomerController::class, 'create'])->name('input-data.customer');
+        Route::get('/departemen', [\App\Http\Controllers\DepartmentController::class, 'index'])->name('input-data.departemen');
         Route::get('/saldo-awal', [\App\Http\Controllers\OpeningBalanceController::class, 'create'])->name('input-data.saldo-awal');
     });
 
@@ -48,6 +49,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('products', \App\Http\Controllers\ProductController::class);
     Route::resource('suppliers', \App\Http\Controllers\SupplierController::class);
     Route::resource('customers', \App\Http\Controllers\CustomerController::class);
+    Route::resource('departments', \App\Http\Controllers\DepartmentController::class);
     Route::resource('opening-balances', \App\Http\Controllers\OpeningBalanceController::class);
 
     /*
@@ -135,6 +137,12 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/status-barang', [\App\Http\Controllers\ReportController::class, 'statusBarang'])->name('laporan.status-barang');
 
+        // Transaction History Edit/Delete Routes - Admin/Pimpinan only
+        Route::middleware('role:Pimpinan,Admin')->group(function () {
+            Route::put('/riwayat-stok/{type}/{id}', [\App\Http\Controllers\TransactionHistoryController::class, 'update'])->name('laporan.riwayat-stok.update');
+            Route::delete('/riwayat-stok/{type}/{id}', [\App\Http\Controllers\TransactionHistoryController::class, 'destroy'])->name('laporan.riwayat-stok.destroy');
+        });
+
         // Data Customer & Supplier Lists
         Route::get('/data-customer', [\App\Http\Controllers\CustomerController::class, 'index'])->name('laporan.data-customer');
         Route::get('/data-supplier', [\App\Http\Controllers\SupplierController::class, 'index'])->name('laporan.data-supplier');
@@ -145,6 +153,12 @@ Route::middleware('auth')->group(function () {
             Route::get('/export/stock-history/excel', [\App\Http\Controllers\ReportExportController::class, 'stockHistoryExcel'])->name('laporan.export.stock-history.excel');
             Route::get('/export/profit-loss/pdf', [\App\Http\Controllers\ReportExportController::class, 'profitLossPdf'])->name('laporan.export.profit-loss.pdf');
             Route::get('/export/profit-loss/excel', [\App\Http\Controllers\ReportExportController::class, 'profitLossExcel'])->name('laporan.export.profit-loss.excel');
+            Route::get('/export/data-barang/pdf', [\App\Http\Controllers\ReportExportController::class, 'dataBarangPdf'])->name('laporan.export.data-barang.pdf');
+            Route::get('/export/data-barang/excel', [\App\Http\Controllers\ReportExportController::class, 'dataBarangExcel'])->name('laporan.export.data-barang.excel');
+            Route::get('/export/kartu-stok/pdf', [\App\Http\Controllers\ReportExportController::class, 'kartuStokPdf'])->name('laporan.export.kartu-stok.pdf');
+            Route::get('/export/kartu-stok/excel', [\App\Http\Controllers\ReportExportController::class, 'kartuStokExcel'])->name('laporan.export.kartu-stok.excel');
+            Route::get('/export/status-barang/pdf', [\App\Http\Controllers\ReportExportController::class, 'statusBarangPdf'])->name('laporan.export.status-barang.pdf');
+            Route::get('/export/status-barang/excel', [\App\Http\Controllers\ReportExportController::class, 'statusBarangExcel'])->name('laporan.export.status-barang.excel');
         });
     });
 

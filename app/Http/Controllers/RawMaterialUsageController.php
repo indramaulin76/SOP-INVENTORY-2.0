@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Department;
 use App\Models\Product;
 use App\Models\UsageRawMaterial;
 use App\Models\UsageRawMaterialItem;
@@ -57,9 +58,13 @@ class RawMaterialUsageController extends Controller
         // Generate reference code
         $referenceCode = UsageRawMaterial::generateReferenceCode();
 
+        // Get all departments
+        $departments = Department::orderBy('nama_departemen')->get(['id', 'nama_departemen', 'kode_departemen']);
+
         return Inertia::render('InputPemakaianBahanBaku', [
             'products' => $products,
             'referenceCode' => $referenceCode,
+            'departments' => $departments,
         ]);
     }
 
@@ -72,6 +77,7 @@ class RawMaterialUsageController extends Controller
             'tanggal' => 'required|date',
             'nomor_bukti' => 'nullable|string|max:100',
             'nama_departemen' => 'required|string|max:255',
+            'department_id' => 'nullable|exists:departments,id',
             'keterangan' => 'nullable|string|max:500',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
@@ -99,6 +105,7 @@ class RawMaterialUsageController extends Controller
                 'tanggal' => $validated['tanggal'],
                 'nomor_bukti' => $nomorBukti,
                 'nama_departemen' => $validated['nama_departemen'],
+                'department_id' => $validated['department_id'] ?? null,
                 'kode_referensi' => UsageRawMaterial::generateReferenceCode(),
                 'keterangan' => $validated['keterangan'] ?? null,
                 'total_nilai' => 0,

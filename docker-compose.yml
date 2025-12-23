@@ -1,0 +1,79 @@
+# ===========================================================
+# Sae Bakery Inventory - Docker Compose (FINAL FIXED)
+# ===========================================================
+
+services:
+  # PHP Application Container
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sae-bakery-app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./storage:/var/www/storage
+      - ./bootstrap/cache:/var/www/bootstrap/cache
+      # 👇 Volume khusus untuk share hasil build aset ke Web Server
+      - build_assets:/var/www/public/build
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+    networks:
+      - sae-network
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # Nginx Web Server
+  web:
+    image: nginx:alpine
+    container_name: sae-bakery-web
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      # 👇 FIX: Hapus ":ro" supaya Docker bisa pasang volume build_assets
+      - ./:/var/www
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
+      # 👇 Baca hasil build dari volume yang sama dengan app
+      - build_assets:/var/www/public/build
+    networks:
+      - sae-network
+    depends_on:
+      - app
+
+  # MySQL Database
+  db:
+    image: mysql:8.0
+    container_name: sae-bakery-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-sae_inventory}
+      MYSQL_USER: ${DB_USERNAME:-sae_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret123}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootsecret}
+    ports:
+      - "3307:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+    networks:
+      - sae-network
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-rootsecret}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+# Persistent Volume
+volumes:
+  db-data:
+    driver: local
+  # 👇 Volume jembatan aset
+  build_assets:
+    driver: local
+
+networks:
+  sae-network:
+    driver: bridge

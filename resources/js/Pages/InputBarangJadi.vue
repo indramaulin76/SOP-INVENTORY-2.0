@@ -12,6 +12,10 @@ const props = defineProps({
         type: Array,
         default: () => []
     },
+    wipProducts: {
+        type: Array,
+        default: () => []
+    },
     nextProductionNo: {
         type: String,
         default: ''
@@ -27,11 +31,21 @@ const form = useForm({
     materials: [
         {
             product_id: '',
-            namaBahanBaku: '', // for display
-            kodeBahanBaku: '', // for display
+            namaBahanBaku: '',
+            kodeBahanBaku: '',
             quantity: 0,
-            satuan: '', // for display
-            current_stock: 0, // for validation warning
+            satuan: '',
+            current_stock: 0,
+        }
+    ],
+    wip_items: [
+        {
+            product_id: '',
+            namaWip: '',
+            kodeWip: '',
+            quantity: 0,
+            satuan: '',
+            current_stock: 0,
         }
     ]
 });
@@ -59,6 +73,25 @@ const updateMaterialDetails = (index) => {
     }
 };
 
+// Helper for WIP details
+const updateWipDetails = (index) => {
+    const item = form.wip_items[index];
+    const wip = props.wipProducts.find(w => w.id == item.product_id);
+    
+    if (wip) {
+        item.namaWip = wip.nama_barang;
+        item.kodeWip = wip.kode_barang;
+        item.satuan = wip.unit;
+        item.current_stock = wip.current_stock;
+    } else {
+        item.namaWip = '';
+        item.kodeWip = '';
+        item.satuan = '';
+        item.current_stock = 0;
+    }
+};
+
+// Raw Materials: Add/Remove
 const addItem = () => {
     form.materials.push({
         product_id: '',
@@ -73,6 +106,24 @@ const addItem = () => {
 const removeItem = (index) => {
     if (form.materials.length > 1) {
         form.materials.splice(index, 1);
+    }
+};
+
+// WIP Items: Add/Remove
+const addWipItem = () => {
+    form.wip_items.push({
+        product_id: '',
+        namaWip: '',
+        kodeWip: '',
+        quantity: 0,
+        satuan: '',
+        current_stock: 0,
+    });
+};
+
+const removeWipItem = (index) => {
+    if (form.wip_items.length > 1) {
+        form.wip_items.splice(index, 1);
     }
 };
 
@@ -188,10 +239,15 @@ const submit = () => {
                             </div>
                         </div>
 
+                        <!-- SECTION 1: Raw Materials -->
                         <div class="border-t border-gray-100 dark:border-gray-700 my-8"></div>
 
                         <div class="flex justify-between items-center mb-4">
-                            <h4 class="text-lg font-semibold text-gray-800 dark:text-white">Daftar Bahan Baku Digunakan</h4>
+                            <h4 class="text-lg font-semibold text-gray-800 dark:text-white flex items-center">
+                                <span class="material-symbols-outlined mr-2 text-primary">inventory_2</span>
+                                Daftar Bahan Baku Digunakan
+                            </h4>
+                            <span class="text-sm text-gray-500">{{ rawMaterials.length }} bahan baku tersedia</span>
                         </div>
 
                         <div class="overflow-x-auto rounded-lg">
@@ -246,6 +302,77 @@ const submit = () => {
                             </button>
                         </div>
 
+                        <!-- SECTION 2: Work In Process (WIP) -->
+                        <div class="border-t border-gray-100 dark:border-gray-700 my-8"></div>
+
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="text-lg font-semibold text-gray-800 dark:text-white flex items-center">
+                                <span class="material-symbols-outlined mr-2 text-orange-500">conveyor_belt</span>
+                                Daftar Barang Dalam Proses Digunakan
+                            </h4>
+                            <span class="text-sm text-gray-500">{{ wipProducts.length }} WIP tersedia</span>
+                        </div>
+
+                        <div v-if="wipProducts.length === 0" class="bg-orange-50 border border-orange-200 text-orange-700 px-4 py-3 rounded-lg text-sm">
+                            <div class="flex items-center">
+                                <span class="material-symbols-outlined mr-2">info</span>
+                                Tidak ada Barang Dalam Proses (WIP) yang tersedia saat ini.
+                            </div>
+                        </div>
+
+                        <div v-else class="overflow-x-auto rounded-lg">
+                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                <thead>
+                                    <tr>
+                                        <th scope="col" class="bg-orange-500 text-white font-semibold text-left px-4 py-3 text-xs" style="width: 30%;">Nama WIP</th>
+                                        <th scope="col" class="bg-orange-500 text-white font-semibold text-left px-4 py-3 text-xs" style="width: 20%;">Kode WIP</th>
+                                        <th scope="col" class="bg-orange-500 text-white font-semibold text-left px-4 py-3 text-xs" style="width: 20%;">Quantity Digunakan</th>
+                                        <th scope="col" class="bg-orange-500 text-white font-semibold text-left px-4 py-3 text-xs" style="width: 20%;">Satuan</th>
+                                        <th scope="col" class="bg-orange-500 text-white font-semibold text-center px-4 py-3 text-xs" style="width: 10%;">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-900 dark:divide-gray-700">
+                                    <tr v-for="(item, index) in form.wip_items" :key="index" class="hover:bg-orange-50 dark:hover:bg-gray-800 transition-colors">
+                                        <td class="p-3">
+                                            <select v-model="item.product_id" @change="updateWipDetails(index)" class="block w-full px-2 py-1.5 border border-orange-300 rounded text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:border-orange-500 focus:ring-orange-500">
+                                                <option value="">Pilih WIP</option>
+                                                <option v-for="wip in props.wipProducts" :key="wip.id" :value="wip.id">
+                                                    {{ wip.nama_barang }} (Stok: {{ wip.current_stock }} {{ wip.unit }})
+                                                </option>
+                                            </select>
+                                            <div v-if="item.product_id && item.quantity > item.current_stock" class="text-red-500 text-[10px] mt-1 flex items-center">
+                                                <span class="material-symbols-outlined text-[12px] mr-1">warning</span>
+                                                Stok kurang!
+                                            </div>
+                                        </td>
+                                        <td class="p-3">
+                                            <input :value="item.kodeWip" class="block w-full px-2 py-1.5 border border-gray-300 rounded text-sm bg-gray-50 text-gray-500 dark:bg-gray-900 dark:border-gray-600 dark:text-gray-400 cursor-not-allowed" placeholder="Kode otomatis" readonly type="text"/>
+                                        </td>
+                                        <td class="p-3">
+                                            <input type="number" step="0.01" v-model="item.quantity" class="block w-full px-2 py-1.5 border border-orange-300 rounded text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:border-orange-500 focus:ring-orange-500"/>
+                                        </td>
+                                        <td class="p-3">
+                                            <input :value="item.satuan" class="block w-full px-2 py-1.5 border border-gray-300 rounded text-sm bg-gray-50 text-gray-500 dark:bg-gray-900 dark:border-gray-600 dark:text-gray-400 cursor-not-allowed" readonly type="text"/>
+                                        </td>
+                                        <td class="p-3 text-center">
+                                            <button @click="removeWipItem(index)" type="button" class="bg-red-500 hover:bg-red-600 text-white rounded p-1.5 flex items-center justify-center transition-colors mx-auto">
+                                                <span class="material-symbols-outlined text-sm">delete</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div v-if="form.errors.wip_items" class="text-red-500 text-xs mt-2 px-4">{{ form.errors.wip_items }}</div>
+                        </div>
+
+                        <div v-if="wipProducts.length > 0" class="mt-4">
+                            <button @click="addWipItem" type="button" class="inline-flex items-center justify-center px-4 py-2 border border-orange-500 text-sm font-medium rounded-md text-orange-600 bg-white hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors">
+                                <span class="material-symbols-outlined text-lg mr-1">add</span>
+                                Tambah WIP
+                            </button>
+                        </div>
+
+                        <!-- Submit -->
                         <div class="flex flex-col sm:flex-row justify-end items-center mt-8 gap-4 border-t border-gray-100 dark:border-gray-700 pt-6">
                             <Link href="/" class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-2.5 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700">
                                 <span class="material-symbols-outlined text-lg mr-2">close</span>

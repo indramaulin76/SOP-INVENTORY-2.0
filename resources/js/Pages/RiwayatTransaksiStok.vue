@@ -152,6 +152,96 @@ const getBadgeClass = (type) => {
     }
     return 'bg-gray-100 text-gray-800';
 };
+
+// Permissions check for edit/delete
+const canEditDelete = computed(() => {
+    return permissions.value?.canViewHPP || false;
+});
+
+// Edit Modal State
+const showEditModal = ref(false);
+const editingTransaction = ref(null);
+const editForm = ref({
+    notes: '',
+    transaction_date: '',
+    reference_number: ''
+});
+
+// Parse transaction ID to get type and numeric id
+const parseTransactionId = (id) => {
+    if (!id) return { type: null, numericId: null };
+    const parts = id.split('-');
+    const type = parts[0];
+    const numericId = parts.slice(1).join('-');
+    return { type, numericId: parseInt(numericId) };
+};
+
+// Open Edit Modal
+const openEditModal = (transaction) => {
+    editingTransaction.value = transaction;
+    editForm.value = {
+        notes: '',
+        transaction_date: '',
+        reference_number: transaction.no_referensi || ''
+    };
+    showEditModal.value = true;
+};
+
+// Close Edit Modal
+const closeEditModal = () => {
+    showEditModal.value = false;
+    editingTransaction.value = null;
+    editForm.value = { notes: '', transaction_date: '', reference_number: '' };
+};
+
+// Submit Edit Form
+const submitEdit = () => {
+    if (!editingTransaction.value) return;
+    
+    const { type, numericId } = parseTransactionId(editingTransaction.value.id);
+    if (!type || !numericId) {
+        alert('ID transaksi tidak valid');
+        return;
+    }
+
+    router.put(route('laporan.riwayat-stok.update', { type, id: numericId }), editForm.value, {
+        onSuccess: () => {
+            closeEditModal();
+        },
+        onError: (errors) => {
+            alert('Gagal update: ' + Object.values(errors).flat().join(', '));
+        }
+    });
+};
+
+// Delete Transaction
+const deleteTransaction = (transaction) => {
+    const { type, numericId } = parseTransactionId(transaction.id);
+    if (!type || !numericId) {
+        alert('ID transaksi tidak valid');
+        return;
+    }
+
+    const isInbound = ['Pembelian', 'Saldo Awal', 'Hasil Produksi', 'WIP Masuk'].includes(transaction.jenis_transaksi);
+    const stockEffect = isInbound ? 'MENGURANGI' : 'MENGEMBALIKAN';
+    const qty = isInbound ? transaction.masuk : transaction.keluar;
+    
+    const confirmMessage = `Anda yakin ingin menghapus transaksi ini?\n\n` +
+        `Transaksi: ${transaction.jenis_transaksi}\n` +
+        `Barang: ${transaction.nama_barang}\n` +
+        `Qty: ${qty} ${transaction.satuan}\n\n` +
+        `⚠️ Ini akan ${stockEffect} stok sebanyak ${qty} ${transaction.satuan}`;
+
+    if (!confirm(confirmMessage)) {
+        return;
+    }
+
+    router.delete(route('laporan.riwayat-stok.destroy', { type, id: numericId }), {
+        onError: (errors) => {
+            alert('Gagal hapus: ' + Object.values(errors).flat().join(', '));
+        }
+    });
+};
 </script>
 
 <template>
@@ -161,6 +251,14 @@ const getBadgeClass = (type) => {
         <template #header>Riwayat Transaksi Stok</template>
 
         <div class="max-w-[1400px] mx-auto">
+            <!-- Flash Messages -->
+            <div v-if="$page.props.flash?.success" class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+                <span class="block sm:inline">{{ $page.props.flash.success }}</span>
+            </div>
+            <div v-if="$page.props.flash?.error" class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                <span class="block sm:inline">{{ $page.props.flash.error }}</span>
+            </div>
+
             <!-- Breadcrumb -->
             <nav aria-label="Breadcrumb" class="flex mb-5">
                 <ol class="inline-flex items-center space-x-1 md:space-x-3">
@@ -325,6 +423,7 @@ const getBadgeClass = (type) => {
                                     <th class="bg-primary text-white font-semibold text-center px-4 py-3 text-xs">Keluar</th>
                                     <th class="bg-primary text-white font-semibold text-center px-4 py-3 text-xs">Saldo</th>
                                     <th class="bg-primary text-white font-semibold text-right px-4 py-3 text-xs">Harga</th>
+                                    <th v-if="canEditDelete" class="bg-primary text-white font-semibold text-center px-4 py-3 text-xs">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-900 dark:divide-gray-700">
@@ -365,9 +464,27 @@ const getBadgeClass = (type) => {
                                     <td class="p-4 text-right text-sm text-gray-600 dark:text-gray-300">
                                         {{ formatCurrency(item.harga_satuan || 0) }}
                                     </td>
+                                    <td v-if="canEditDelete" class="p-4 text-center">
+                                        <div class="flex items-center justify-center gap-1">
+                                            <button 
+                                                @click="openEditModal(item)"
+                                                class="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
+                                                title="Edit"
+                                            >
+                                                <span class="material-symbols-outlined text-lg">edit</span>
+                                            </button>
+                                            <button 
+                                                @click="deleteTransaction(item)"
+                                                class="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                                                title="Hapus"
+                                            >
+                                                <span class="material-symbols-outlined text-lg">delete</span>
+                                            </button>
+                                        </div>
+                                    </td>
                                 </tr>
                                 <tr v-if="filteredTransactions.length === 0">
-                                    <td colspan="8" class="p-8 text-center text-gray-500">
+                                    <td :colspan="canEditDelete ? 9 : 8" class="p-8 text-center text-gray-500">
                                         <span class="material-symbols-outlined text-4xl mb-2 text-gray-300">inbox</span>
                                         <p>Belum ada data transaksi stok.</p>
                                     </td>
@@ -398,4 +515,77 @@ const getBadgeClass = (type) => {
             </div>
         </div>
     </SaeLayout>
+
+    <!-- Edit Modal -->
+    <Teleport to="body">
+        <div v-if="showEditModal" class="fixed inset-0 z-50 overflow-y-auto">
+            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+                <div class="fixed inset-0 bg-black/50 transition-opacity" @click="closeEditModal"></div>
+                
+                <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full mx-auto z-10 overflow-hidden">
+                    <div class="bg-primary px-6 py-4 text-white">
+                        <h3 class="text-lg font-semibold flex items-center">
+                            <span class="material-symbols-outlined mr-2">edit</span>
+                            Edit Transaksi
+                        </h3>
+                        <p class="text-sm text-white/70 mt-1">{{ editingTransaction?.jenis_transaksi }} - {{ editingTransaction?.nama_barang }}</p>
+                    </div>
+                    
+                    <form @submit.prevent="submitEdit" class="p-6 space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">No. Referensi</label>
+                            <input 
+                                v-model="editForm.reference_number"
+                                type="text"
+                                class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 text-sm focus:ring-primary focus:border-primary"
+                                placeholder="Nomor referensi"
+                            />
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tanggal</label>
+                            <input 
+                                v-model="editForm.transaction_date"
+                                type="date"
+                                class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 text-sm focus:ring-primary focus:border-primary"
+                            />
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Keterangan</label>
+                            <textarea 
+                                v-model="editForm.notes"
+                                rows="3"
+                                class="w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 text-sm focus:ring-primary focus:border-primary"
+                                placeholder="Keterangan transaksi"
+                            ></textarea>
+                        </div>
+
+                        <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+                            <p class="text-xs text-yellow-700 dark:text-yellow-400">
+                                <span class="material-symbols-outlined text-sm align-middle mr-1">info</span>
+                                Hanya field di atas yang dapat diubah. Kuantitas & Harga tidak dapat diubah untuk menjaga integritas HPP.
+                            </p>
+                        </div>
+                        
+                        <div class="flex justify-end gap-3 pt-2">
+                            <button 
+                                type="button"
+                                @click="closeEditModal"
+                                class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                            >
+                                Batal
+                            </button>
+                            <button 
+                                type="submit"
+                                class="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary-hover rounded-lg transition-colors"
+                            >
+                                Simpan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </Teleport>
 </template>

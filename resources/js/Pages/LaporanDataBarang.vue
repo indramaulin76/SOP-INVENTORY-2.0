@@ -1,7 +1,7 @@
 <script setup>
 import SaeLayout from '@/Layouts/SaeLayout.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
 
 const props = defineProps({
     products: Object,
@@ -11,6 +11,9 @@ const props = defineProps({
     },
     filters: Object
 });
+
+const page = usePage();
+const permissions = computed(() => page.props.auth?.permissions || {});
 
 // Filter state
 const search = ref(props.filters?.search || '');
@@ -35,6 +38,24 @@ const clearFilter = () => {
         preserveState: true,
         replace: true,
     });
+};
+
+// Export Excel function
+const exportExcel = () => {
+    const params = new URLSearchParams({
+        search: search.value || '',
+        category_id: categoryId.value || '',
+    }).toString();
+    window.open(`/laporan/export/data-barang/excel?${params}`, '_blank');
+};
+
+// Export PDF function
+const exportPdf = () => {
+    const params = new URLSearchParams({
+        search: search.value || '',
+        category_id: categoryId.value || '',
+    }).toString();
+    window.location.href = `/laporan/export/data-barang/pdf?${params}`;
 };
 
 const showDeleteModal = ref(false);
@@ -110,8 +131,24 @@ const formatCurrency = (value) => {
                         <span class="material-symbols-outlined mr-3">inventory_2</span>
                         <h3 class="text-lg font-semibold">Daftar Seluruh Data Barang</h3>
                     </div>
-                    <div class="flex items-center space-x-2">
+                    <div class="flex items-center space-x-3">
                         <span class="text-sm opacity-80">Total: {{ products.total }} items</span>
+                        <div v-if="permissions.canViewHPP" class="flex gap-2">
+                            <button 
+                                @click="exportPdf" 
+                                class="bg-white/20 hover:bg-white/30 text-white p-1.5 rounded transition-colors"
+                                title="Export PDF"
+                            >
+                                <span class="material-symbols-outlined text-xl">picture_as_pdf</span>
+                            </button>
+                            <button 
+                                @click="exportExcel" 
+                                class="bg-white/20 hover:bg-white/30 text-white p-1.5 rounded transition-colors"
+                                title="Export Excel"
+                            >
+                                <span class="material-symbols-outlined text-xl">table_view</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 

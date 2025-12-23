@@ -109,14 +109,12 @@ class OpeningBalanceController extends Controller
                 // Create inventory batch for tracking stock
                 InventoryBatch::create([
                     'product_id' => $itemData['product_id'],
-                    'reference_type' => 'opening_balance',
-                    'reference_id' => $openingBalance->id,
-                    'batch_number' => 'OB-' . $openingBalance->id . '-' . $item->id,
-                    'tanggal_masuk' => $validated['tanggal'],
-                    'qty_awal' => $itemData['jumlah_unit'],
+                    'source' => 'opening_balance',
+                    'batch_no' => 'OB-' . $openingBalance->id . '-' . $item->id,
+                    'date_in' => $validated['tanggal'],
+                    'qty_initial' => $itemData['jumlah_unit'],
                     'qty_current' => $itemData['jumlah_unit'],
-                    'unit_cost' => $itemData['harga_beli'],
-                    'unit_price' => $itemData['harga_jual'],
+                    'price_per_unit' => $itemData['harga_beli'],
                 ]);
             }
 

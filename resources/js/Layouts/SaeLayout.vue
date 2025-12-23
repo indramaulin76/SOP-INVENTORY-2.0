@@ -166,6 +166,10 @@ const toggleDarkMode = () => {
                             <span :class="['w-1.5 h-1.5 rounded-full mr-2 transition-colors', $page.url === '/input-data/customer' ? 'bg-primary' : 'bg-gray-300 group-hover:bg-primary']"></span>
                             Input Data Customer
                         </Link>
+                        <Link href="/input-data/departemen" :class="['group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors', $page.url === '/input-data/departemen' ? 'text-primary bg-white shadow-sm border border-gray-100 dark:bg-gray-800 dark:border-gray-600 dark:text-primary' : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white']">
+                            <span :class="['w-1.5 h-1.5 rounded-full mr-2 transition-colors', $page.url === '/input-data/departemen' ? 'bg-primary' : 'bg-gray-300 group-hover:bg-primary']"></span>
+                            Input Data Departemen
+                        </Link>
                         <Link href="/input-data/saldo-awal" :class="['group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors', $page.url === '/input-data/saldo-awal' ? 'text-primary bg-white shadow-sm border border-gray-100 dark:bg-gray-800 dark:border-gray-600 dark:text-primary' : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white']">
                             <span :class="['w-1.5 h-1.5 rounded-full mr-2 transition-colors', $page.url === '/input-data/saldo-awal' ? 'bg-primary' : 'bg-gray-300 group-hover:bg-primary']"></span>
                             Input Saldo Awal

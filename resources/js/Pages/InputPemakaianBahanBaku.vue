@@ -11,6 +11,10 @@ const props = defineProps({
     referenceCode: {
         type: String,
         default: ''
+    },
+    departments: {
+        type: Array,
+        default: () => []
     }
 });
 
@@ -18,6 +22,7 @@ const form = useForm({
     tanggal: new Date().toISOString().split('T')[0],
     nomor_bukti: '',
     nama_departemen: '',
+    department_id: '',
     keterangan: '',
     items: [
         {
@@ -57,6 +62,14 @@ const formatStock = (value) => {
     const num = parseFloat(value);
     if (isNaN(num)) return '0';
     return Number.isInteger(num) ? num.toString() : num.toLocaleString('id-ID');
+};
+
+// Auto-fill nama_departemen when selecting department
+const selectDepartment = () => {
+    const selectedDept = props.departments.find(d => d.id == form.department_id);
+    if (selectedDept) {
+        form.nama_departemen = selectedDept.nama_departemen;
+    }
 };
 
 // Grand total
@@ -164,6 +177,22 @@ const submit = () => {
                             <div class="space-y-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        Pilih Departemen
+                                    </label>
+                                    <select 
+                                        v-model="form.department_id"
+                                        @change="selectDepartment"
+                                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white py-2 px-3"
+                                    >
+                                        <option value="">-- Pilih Departemen --</option>
+                                        <option v-for="dept in departments" :key="dept.id" :value="dept.id">
+                                            {{ dept.nama_departemen }}
+                                        </option>
+                                    </select>
+                                    <p v-if="form.errors.department_id" class="text-red-500 text-xs mt-1">{{ form.errors.department_id }}</p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                         Nama Departemen/Produksi <span class="text-red-500">*</span>
                                     </label>
                                     <input 
@@ -173,6 +202,7 @@ const submit = () => {
                                         type="text"
                                         required
                                     />
+                                    <p class="text-xs text-gray-400 mt-1">Otomatis terisi jika memilih departemen, atau isi manual</p>
                                     <p v-if="form.errors.nama_departemen" class="text-red-500 text-xs mt-1">{{ form.errors.nama_departemen }}</p>
                                 </div>
                                 <div>

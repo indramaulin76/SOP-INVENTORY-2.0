@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Department;
 use App\Models\Product;
 use App\Models\UsageWip;
 use App\Models\UsageWipItem;
@@ -53,9 +54,13 @@ class UsageWipController extends Controller
         // Generate reference code
         $referenceCode = UsageWip::generateReferenceCode();
 
+        // Get all departments
+        $departments = Department::orderBy('nama_departemen')->get(['id', 'nama_departemen', 'kode_departemen']);
+
         return Inertia::render('InputPemakaianBarangDalamProses', [
             'products' => $products,
             'referenceCode' => $referenceCode,
+            'departments' => $departments,
         ]);
     }
 
@@ -68,6 +73,7 @@ class UsageWipController extends Controller
             'tanggal' => 'required|date',
             'nomor_bukti' => 'nullable|string|max:100',
             'nama_departemen' => 'required|string|max:255',
+            'department_id' => 'nullable|exists:departments,id',
             'keterangan' => 'nullable|string|max:500',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
@@ -95,6 +101,7 @@ class UsageWipController extends Controller
                 'tanggal' => $validated['tanggal'],
                 'nomor_bukti' => $nomorBukti,
                 'nama_departemen' => $validated['nama_departemen'],
+                'department_id' => $validated['department_id'] ?? null,
                 'kode_referensi' => UsageWip::generateReferenceCode(),
                 'keterangan' => $validated['keterangan'] ?? null,
                 'total_nilai' => 0,

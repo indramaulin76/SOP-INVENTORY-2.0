@@ -26,6 +26,17 @@ const formatCurrency = (value) => {
     }).format(value || 0);
 };
 
+// Format stock numbers - removes unnecessary decimals and leading zeros
+const formatStock = (value) => {
+    const num = parseFloat(value) || 0;
+    // If it's a whole number, show without decimals
+    if (Number.isInteger(num)) {
+        return num.toLocaleString('id-ID');
+    }
+    // Otherwise show with max 2 decimals
+    return num.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+};
+
 const loadProduct = () => {
     if (selectedProductId.value) {
         router.get(route('laporan.kartu-stok'), {
@@ -61,6 +72,35 @@ const totalMasuk = computed(() => {
 const totalKeluar = computed(() => {
     return props.movements.reduce((sum, m) => sum + (m.keluar || 0), 0);
 });
+
+// Export functions
+const exportPdf = () => {
+    if (!selectedProductId.value) {
+        alert('Pilih produk terlebih dahulu');
+        return;
+    }
+    const params = new URLSearchParams({
+        product_id: selectedProductId.value,
+    });
+    if (props.filters?.dateFrom) params.append('start_date', props.filters.dateFrom);
+    if (props.filters?.dateTo) params.append('end_date', props.filters.dateTo);
+    
+    window.location.href = route('laporan.export.kartu-stok.pdf') + '?' + params.toString();
+};
+
+const exportExcel = () => {
+    if (!selectedProductId.value) {
+        alert('Pilih produk terlebih dahulu');
+        return;
+    }
+    const params = new URLSearchParams({
+        product_id: selectedProductId.value,
+    });
+    if (props.filters?.dateFrom) params.append('start_date', props.filters.dateFrom);
+    if (props.filters?.dateTo) params.append('end_date', props.filters.dateTo);
+    
+    window.location.href = route('laporan.export.kartu-stok.excel') + '?' + params.toString();
+};
 </script>
 
 <template>
@@ -162,14 +202,14 @@ const totalKeluar = computed(() => {
                         <span class="text-green-600 dark:text-green-400 text-sm font-medium">Total Masuk</span>
                         <span class="material-symbols-outlined text-green-500">arrow_downward</span>
                     </div>
-                    <p class="text-2xl font-bold text-green-700 dark:text-green-300 mt-2">{{ totalMasuk.toLocaleString('id-ID') }}</p>
+                    <p class="text-2xl font-bold text-green-700 dark:text-green-300 mt-2">{{ formatStock(totalMasuk) }}</p>
                 </div>
                 <div class="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded-lg p-4 border border-red-200 dark:border-red-800">
                     <div class="flex items-center justify-between">
                         <span class="text-red-600 dark:text-red-400 text-sm font-medium">Total Keluar</span>
                         <span class="material-symbols-outlined text-red-500">arrow_upward</span>
                     </div>
-                    <p class="text-2xl font-bold text-red-700 dark:text-red-300 mt-2">{{ totalKeluar.toLocaleString('id-ID') }}</p>
+                    <p class="text-2xl font-bold text-red-700 dark:text-red-300 mt-2">{{ formatStock(totalKeluar) }}</p>
                 </div>
                 <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
                     <div class="flex items-center justify-between">
@@ -182,19 +222,27 @@ const totalKeluar = computed(() => {
 
             <!-- Detail Mutasi Stok -->
             <div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col">
-                <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-surface-dark">
-                    <h3 class="text-lg font-semibold text-gray-800 dark:text-white flex items-center">
-                        <span class="material-symbols-outlined mr-2 text-gray-400">receipt_long</span>
-                        Detail Mutasi Stok
-                    </h3>
+                <div class="bg-primary px-6 py-4 flex justify-between items-center text-white">
+                    <div class="flex items-center">
+                        <span class="material-symbols-outlined mr-3">receipt_long</span>
+                        <h3 class="text-lg font-semibold">Detail Mutasi Stok</h3>
+                    </div>
                     <div class="flex gap-2">
-                        <button class="flex items-center gap-1 bg-white border border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 px-3 py-1.5 rounded-md text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                            <span class="material-symbols-outlined text-sm">print</span>
-                            <span class="hidden sm:inline">Print</span>
+                        <button 
+                            @click="exportPdf"
+                            :disabled="!selectedProductId"
+                            class="bg-white/20 hover:bg-white/30 text-white p-1.5 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed" 
+                            title="Export PDF"
+                        >
+                            <span class="material-symbols-outlined text-xl">picture_as_pdf</span>
                         </button>
-                        <button class="flex items-center gap-1 bg-green-50 border border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400 px-3 py-1.5 rounded-md text-sm hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors">
-                            <span class="material-symbols-outlined text-sm">table_view</span>
-                            <span class="hidden sm:inline">Excel</span>
+                        <button 
+                            @click="exportExcel"
+                            :disabled="!selectedProductId"
+                            class="bg-white/20 hover:bg-white/30 text-white p-1.5 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed" 
+                            title="Export Excel"
+                        >
+                            <span class="material-symbols-outlined text-xl">table_view</span>
                         </button>
                     </div>
                 </div>
@@ -216,18 +264,18 @@ const totalKeluar = computed(() => {
                                 <td class="p-3 text-sm text-gray-800 dark:text-gray-200">{{ mutation.keterangan }}</td>
                                 <td class="p-3 text-sm text-right font-medium">
                                     <span v-if="mutation.masuk > 0" class="text-green-600 dark:text-green-400">
-                                        +{{ mutation.masuk.toLocaleString('id-ID') }}
+                                        +{{ formatStock(mutation.masuk) }}
                                     </span>
                                     <span v-else class="text-gray-400">-</span>
                                 </td>
                                 <td class="p-3 text-sm text-right font-medium">
                                     <span v-if="mutation.keluar > 0" class="text-red-500 dark:text-red-400">
-                                        -{{ mutation.keluar.toLocaleString('id-ID') }}
+                                        -{{ formatStock(mutation.keluar) }}
                                     </span>
                                     <span v-else class="text-gray-400">-</span>
                                 </td>
                                 <td class="p-3 text-sm text-right font-bold text-gray-900 dark:text-white bg-gray-50/50 dark:bg-gray-800/50">
-                                    {{ mutation.saldo.toLocaleString('id-ID') }}
+                                    {{ formatStock(mutation.saldo) }}
                                 </td>
                                 <td class="p-3 text-sm text-right text-gray-600 dark:text-gray-300">
                                     {{ formatCurrency(mutation.harga) }}
