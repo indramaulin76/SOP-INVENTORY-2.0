@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 
 class DatabaseSeeder extends Seeder
@@ -13,35 +12,22 @@ class DatabaseSeeder extends Seeder
      * Comprehensive seeder untuk demo aplikasi Sae Bakery Inventory System.
      * 
      * Scenario:
-     * - Master Data: Users, Units, Categories, Departments
-     * - Products: Raw Materials & Finished Goods
-     * - Transactions: Opening Balance, Usage, Production, Sales
+     * - Master Data: Users, Units, Categories, Departments, Settings (via MasterDataSeeder)
+     * - Dummy Data: Products & Transactions (Optional, for Demo Only)
      */
     public function run(): void
     {
         $this->info('🧹 Cleaning database...');
         $this->cleanDatabase();
 
-        $this->info('👥 Creating users...');
-        $this->createUsers();
+        // 1. Jalankan Master Data (WAJIB ADA)
+        // Ini memastikan dropdown user, satuan, dan kategori TERISI
+        // meskipun belum ada barang/transaksi.
+        $this->call(MasterDataSeeder::class);
 
-        $this->info('📦 Creating master data...');
-        $units = $this->createUnits();
-        $categories = $this->createCategories();
-        $this->createDepartments();
-
-        $this->info('🛒 Creating products...');
-        $products = $this->createProducts($units, $categories);
-
-        $this->info('📊 Creating transactions...');
-        $this->createOpeningBalance($products);
-        $this->createUsageTransactions($products);
-        $this->createProductionResults($products);
-        $this->createSalesTransactions($products);
-
-        $this->info('⚙️ Creating settings...');
-        $this->createSettings();
-
+        // 2. Dummy Data (OPSIONAL - Uncomment jika butuh data demo)
+        // $this->seedDummyData();
+        
         $this->info('✅ Seeding complete!');
     }
 
@@ -57,34 +43,19 @@ class DatabaseSeeder extends Seeder
      */
     private function cleanDatabase(): void
     {
-        // Disable foreign key checks temporarily
-        DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        \Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
 
-        // Truncate tables in correct order
         $tables = [
-            'sales_finished_goods_items',
-            'sales_finished_goods',
-            'finished_goods_production_materials',
-            'finished_goods_productions',
-            'usage_wip_items',
-            'usage_wip',
-            'wip_entry_items',
-            'wip_entries',
-            'usage_raw_material_items',
-            'usage_raw_materials',
-            'purchase_raw_material_items',
-            'purchase_raw_materials',
-            'opening_balance_items',
-            'opening_balances',
-            'inventory_batches',
-            'stock_opname_items',
-            'stock_opnames',
+            'sales_finished_goods_items', 'sales_finished_goods',
+            'finished_goods_production_materials', 'finished_goods_productions',
+            'usage_wip_items', 'usage_wip',
+            'wip_entry_items', 'wip_entries',
+            'usage_raw_material_items', 'usage_raw_materials',
+            'purchase_raw_material_items', 'purchase_raw_materials',
+            'opening_balance_items', 'opening_balances',
+            'inventory_batches', 'stock_opname_items', 'stock_opnames',
             'products',
-            'departments',
-            'categories',
-            'units',
-            'users',
-            'settings',
+            'departments', 'categories', 'units', 'users', 'settings',
         ];
 
         foreach ($tables as $table) {
@@ -93,126 +64,33 @@ class DatabaseSeeder extends Seeder
             }
         }
 
-        DB::statement('SET FOREIGN_KEY_CHECKS=1');
+        \Illuminate\Support\Facades\Schema::enableForeignKeyConstraints();
     }
 
     /**
-     * Create demo users
+     * Helper to load dummy data (Products & Transactions)
+     * Requires Master Data to be present first.
      */
-    private function createUsers(): void
+    private function seedDummyData(): void
     {
-        $now = now();
+        $this->info('Creating dummy data...');
+        
+        // Ambil ID dari Master Data yang sudah di-seed
+        $units = DB::table('units')->pluck('id', 'singkatan')->toArray();
+        $categories = DB::table('categories')->pluck('id', 'kode_kategori')->toArray();
 
-        DB::table('users')->insert([
-            [
-                'name' => 'Owner / Pimpinan',
-                'email' => 'pimpinan@saebakery.com',
-                'password' => Hash::make('password'),
-                'role' => 'Pimpinan',
-                'created_at' => $now,
-                'updated_at' => $now,
-            ],
-            [
-                'name' => 'Admin Inventory',
-                'email' => 'admin@saebakery.com',
-                'password' => Hash::make('password'),
-                'role' => 'Admin',
-                'created_at' => $now,
-                'updated_at' => $now,
-            ],
-            [
-                'name' => 'Staff Gudang',
-                'email' => 'karyawan@saebakery.com',
-                'password' => Hash::make('password'),
-                'role' => 'Karyawan',
-                'created_at' => $now,
-                'updated_at' => $now,
-            ],
-        ]);
+        $this->info('🛒 Creating products (Dummy)...');
+        $products = $this->createProducts($units, $categories);
+
+        $this->info('📊 Creating transactions (Dummy)...');
+        $this->createOpeningBalance($products);
+        $this->createUsageTransactions($products);
+        $this->createProductionResults($products);
+        $this->createSalesTransactions($products);
     }
 
     /**
-     * Create units
-     */
-    private function createUnits(): array
-    {
-        $now = now();
-        $units = [
-            ['nama_satuan' => 'Kilogram', 'singkatan' => 'kg'],
-            ['nama_satuan' => 'Pieces', 'singkatan' => 'pcs'],
-            ['nama_satuan' => 'Liter', 'singkatan' => 'ltr'],
-            ['nama_satuan' => 'Zak', 'singkatan' => 'zak'],
-            ['nama_satuan' => 'Gram', 'singkatan' => 'gr'],
-            ['nama_satuan' => 'Pack', 'singkatan' => 'pack'],
-        ];
-
-        $result = [];
-        foreach ($units as $unit) {
-            $id = DB::table('units')->insertGetId([
-                'nama_satuan' => $unit['nama_satuan'],
-                'singkatan' => $unit['singkatan'],
-                'created_at' => $now,
-                'updated_at' => $now,
-            ]);
-            $result[$unit['singkatan']] = $id;
-        }
-
-        return $result;
-    }
-
-    /**
-     * Create categories
-     */
-    private function createCategories(): array
-    {
-        $now = now();
-        $categories = [
-            ['kode' => 'BB', 'nama' => 'Bahan Baku'],
-            ['kode' => 'BJ', 'nama' => 'Barang Jadi'],
-            ['kode' => 'KM', 'nama' => 'Kemasan'],
-            ['kode' => 'WIP', 'nama' => 'Barang Dalam Proses'],
-        ];
-
-        $result = [];
-        foreach ($categories as $cat) {
-            $id = DB::table('categories')->insertGetId([
-                'kode_kategori' => $cat['kode'],
-                'nama_kategori' => $cat['nama'],
-                'created_at' => $now,
-                'updated_at' => $now,
-            ]);
-            $result[$cat['kode']] = $id;
-        }
-
-        return $result;
-    }
-
-    /**
-     * Create departments
-     */
-    private function createDepartments(): void
-    {
-        $now = now();
-        $departments = [
-            ['kode' => 'DEPT-001', 'nama' => 'Kitchen', 'keterangan' => 'Bagian produksi dan pengolahan'],
-            ['kode' => 'DEPT-002', 'nama' => 'Warehouse', 'keterangan' => 'Bagian gudang penyimpanan'],
-            ['kode' => 'DEPT-003', 'nama' => 'Store Front', 'keterangan' => 'Bagian penjualan toko'],
-            ['kode' => 'DEPT-004', 'nama' => 'Packaging', 'keterangan' => 'Bagian pengemasan'],
-        ];
-
-        foreach ($departments as $dept) {
-            DB::table('departments')->insert([
-                'kode_departemen' => $dept['kode'],
-                'nama_departemen' => $dept['nama'],
-                'keterangan' => $dept['keterangan'],
-                'created_at' => $now,
-                'updated_at' => $now,
-            ]);
-        }
-    }
-
-    /**
-     * Create products
+     * Create products (Dummy)
      */
     private function createProducts(array $units, array $categories): array
     {
@@ -560,31 +438,6 @@ class DatabaseSeeder extends Seeder
                 ->update(['qty_current' => $available - $toDeduct]);
 
             $remaining -= $toDeduct;
-        }
-    }
-
-    /**
-     * Create application settings
-     */
-    private function createSettings(): void
-    {
-        $now = now();
-        $settings = [
-            ['key' => 'company_name', 'value' => 'Sae Bakery'],
-            ['key' => 'company_address', 'value' => 'Jl. Contoh No. 123, Kota Demo'],
-            ['key' => 'company_phone', 'value' => '021-1234567'],
-            ['key' => 'hpp_method', 'value' => 'FIFO'],
-            ['key' => 'currency', 'value' => 'IDR'],
-            ['key' => 'date_format', 'value' => 'd/m/Y'],
-        ];
-
-        foreach ($settings as $setting) {
-            DB::table('settings')->insert([
-                'key' => $setting['key'],
-                'value' => $setting['value'],
-                'created_at' => $now,
-                'updated_at' => $now,
-            ]);
         }
     }
 }

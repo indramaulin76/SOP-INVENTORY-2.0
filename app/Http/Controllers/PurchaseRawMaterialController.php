@@ -32,25 +32,29 @@ class PurchaseRawMaterialController extends Controller
      */
     public function create()
     {
-        // Get Bahan Baku category
+        // Get Bahan Baku category (with null check for fresh database)
         $bahanBakuCategory = Category::where('nama_kategori', Category::BAHAN_BAKU)->first();
         
         // Only get Bahan Baku products for raw material purchase
-        $products = Product::with(['category', 'unit'])
-            ->where('category_id', $bahanBakuCategory->id)
-            ->orderBy('nama_barang')
-            ->get()
-            ->map(function ($product) {
-                return [
-                    'id' => $product->id,
-                    'kode_barang' => $product->kode_barang,
-                    'nama_barang' => $product->nama_barang,
-                    'category' => $product->category?->nama_kategori ?? '-',
-                    'unit' => $product->unit?->nama_satuan ?? '-',
-                ];
-            })
-            ->values()
-            ->toArray();
+        // If category doesn't exist yet, return empty array
+        $products = [];
+        if ($bahanBakuCategory) {
+            $products = Product::with(['category', 'unit'])
+                ->where('category_id', $bahanBakuCategory->id)
+                ->orderBy('nama_barang')
+                ->get()
+                ->map(function ($product) {
+                    return [
+                        'id' => $product->id,
+                        'kode_barang' => $product->kode_barang,
+                        'nama_barang' => $product->nama_barang,
+                        'category' => $product->category?->nama_kategori ?? '-',
+                        'unit' => $product->unit?->nama_satuan ?? '-',
+                    ];
+                })
+                ->values()
+                ->toArray();
+        }
 
         $suppliers = Supplier::orderBy('nama_supplier')
             ->get()
