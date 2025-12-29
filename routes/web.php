@@ -47,6 +47,11 @@ Route::middleware('auth')->group(function () {
 
     // Master Data Resource Routes
     Route::resource('products', \App\Http\Controllers\ProductController::class);
+    
+    // Custom Product Routes (Archive & Force Delete)
+    Route::put('/products/{id}/archive', [\App\Http\Controllers\ProductController::class, 'archive'])->name('products.archive');
+    Route::delete('/products/{id}/force-delete', [\App\Http\Controllers\ProductController::class, 'forceDestroy'])->name('products.force-destroy');
+    
     Route::resource('suppliers', \App\Http\Controllers\SupplierController::class);
     Route::resource('customers', \App\Http\Controllers\CustomerController::class);
     Route::resource('departments', \App\Http\Controllers\DepartmentController::class);
