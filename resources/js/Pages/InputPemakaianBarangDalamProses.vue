@@ -61,7 +61,7 @@ const formatStock = (value) => {
 const getItemTotal = (item) => {
     const product = getProduct(item.product_id);
     if (!product) return 0;
-    return item.quantity * (product.harga_jual || 0);
+    return item.quantity * (product.hpp || 0);
 };
 
 // Grand total
@@ -284,7 +284,7 @@ const submit = () => {
                                         </td>
                                         <td class="p-3 text-sm text-gray-600 dark:text-gray-400">
                                             <span v-if="getProduct(item.product_id)">
-                                                Rp {{ (getProduct(item.product_id).harga_jual || 0).toLocaleString('id-ID') }}
+                                                Rp {{ (getProduct(item.product_id).hpp || 0).toLocaleString('id-ID') }}
                                             </span>
                                             <span v-else>-</span>
                                         </td>

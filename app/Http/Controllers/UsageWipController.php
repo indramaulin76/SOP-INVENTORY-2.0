@@ -39,13 +39,17 @@ class UsageWipController extends Controller
             ->map(function ($product) {
                 $availableStock = $product->inventoryBatches->sum('qty_current');
                 
+                // Get average HPP from inventory batches (weighted average)
+                $totalValue = $product->inventoryBatches->sum(fn($b) => $b->qty_current * $b->price_per_unit);
+                $avgHpp = $availableStock > 0 ? $totalValue / $availableStock : 0;
+                
                 return [
                     'id' => $product->id,
                     'kode_barang' => $product->kode_barang,
                     'nama_barang' => $product->nama_barang,
                     'unit' => $product->unit->nama_satuan ?? 'pcs',
                     'available_stock' => $availableStock,
-                    'harga_jual' => $product->harga_jual_default ?? 0,
+                    'hpp' => round($avgHpp, 2), // HPP dari inventory
                 ];
             })
             ->filter(fn($p) => $p['available_stock'] > 0)
@@ -119,17 +123,16 @@ class UsageWipController extends Controller
                 // Consume stock using InventoryService (FIFO/LIFO/Average)
                 $consumed = $this->inventoryService->consumeInventory($item['product_id'], $item['quantity']);
 
-                // Get selling price from product
-                $product = Product::find($item['product_id']);
-                $hargaJual = $product->harga_jual_default ?? 0;
-                $totalNilai = $item['quantity'] * $hargaJual;
+                // Get HPP from consumed inventory (FIFO method)
+                $hpp = $consumed['cost_per_unit'] ?? $this->inventoryService->getAveragePrice($item['product_id']);
+                $totalNilai = $item['quantity'] * $hpp;
 
-                // Create usage item with selling price
+                // Create usage item with HPP (bukan harga jual)
                 UsageWipItem::create([
                     'usage_wip_id' => $usage->id,
                     'product_id' => $item['product_id'],
                     'quantity' => $item['quantity'],
-                    'harga' => $hargaJual,
+                    'harga' => $hpp,
                     'jumlah' => $totalNilai,
                 ]);
             }
