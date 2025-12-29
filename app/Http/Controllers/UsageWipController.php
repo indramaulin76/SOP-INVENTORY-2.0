@@ -123,8 +123,8 @@ class UsageWipController extends Controller
                 // Consume stock using InventoryService (FIFO/LIFO/Average)
                 $consumed = $this->inventoryService->consumeInventory($item['product_id'], $item['quantity']);
 
-                // Get HPP from consumed inventory (FIFO method)
-                $hpp = $consumed['cost_per_unit'] ?? $this->inventoryService->getAveragePrice($item['product_id']);
+                // Get HPP from consumed inventory (average cost from FIFO consumption)
+                $hpp = $consumed['average_cost'] ?? $this->inventoryService->getAveragePrice($item['product_id']);
                 $totalNilai = $item['quantity'] * $hpp;
 
                 // Create usage item with HPP (bukan harga jual)
