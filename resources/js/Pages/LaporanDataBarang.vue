@@ -1,7 +1,7 @@
 <script setup>
 import SaeLayout from '@/Layouts/SaeLayout.vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 
 const props = defineProps({
     products: Object,
@@ -59,7 +59,18 @@ const exportPdf = () => {
 };
 
 const showDeleteModal = ref(false);
+const showConfirmChoiceModal = ref(false);
+const showForceDeleteWarning = ref(false);
 const productToDelete = ref(null);
+const deleteConfirmData = ref(null);
+
+// Watch for delete_confirmation_needed flash message
+watch(() => page.props.flash.delete_confirmation_needed, (data) => {
+    if (data) {
+        deleteConfirmData.value = data;
+        showConfirmChoiceModal.value = true;
+    }
+}, { deep: true });
 
 const confirmDelete = (product) => {
     productToDelete.value = product;
@@ -72,6 +83,33 @@ const deleteProduct = () => {
             onSuccess: () => {
                 showDeleteModal.value = false;
                 productToDelete.value = null;
+            },
+        });
+    }
+};
+
+const archiveProduct = () => {
+    if (deleteConfirmData.value) {
+        router.put(route('products.archive', deleteConfirmData.value.id), {}, {
+            onSuccess: () => {
+                showConfirmChoiceModal.value = false;
+                deleteConfirmData.value = null;
+            },
+        });
+    }
+};
+
+const confirmForceDelete = () => {
+    showConfirmChoiceModal.value = false;
+    showForceDeleteWarning.value = true;
+};
+
+const forceDeleteProduct = () => {
+    if (deleteConfirmData.value) {
+        router.delete(route('products.force-destroy', deleteConfirmData.value.id), {
+            onSuccess: () => {
+                showForceDeleteWarning.value = false;
+                deleteConfirmData.value = null;
             },
         });
     }
@@ -304,6 +342,107 @@ const formatCurrency = (value) => {
                             Ya, Hapus Permanen
                         </button>
                         <button @click="showDeleteModal = false" type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm dark:bg-gray-600 dark:text-white dark:border-gray-500 dark:hover:bg-gray-500">
+                            Batal
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Choice Modal: Archive or Force Delete -->
+        <div v-if="showConfirmChoiceModal" class="fixed inset-0 z-50 overflow-y-auto">
+            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 transition-opacity" @click="showConfirmChoiceModal = false">
+                    <div class="absolute inset-0 bg-gray-900 opacity-75"></div>
+                </div>
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+                <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                    <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <span class="material-symbols-outlined text-yellow-600">link_off</span>
+                            </div>
+                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">
+                                    Data Terikat Transaksi!
+                                </h3>
+                                <div class="mt-2">
+                                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                                        {{ deleteConfirmData?.message }}
+                                    </p>
+                                    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-3">
+                                        <p class="text-xs text-blue-800 dark:text-blue-300 font-semibold mb-1">📂 ARSIPKAN (Direkomendasikan)</p>
+                                        <p class="text-xs text-blue-700 dark:text-blue-400">
+                                            Produk disembunyikan dari input baru, tapi data lama tetap aman untuk laporan.
+                                        </p>
+                                    </div>
+                                    <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
+                                        <p class="text-xs text-red-800 dark:text-red-300 font-semibold mb-1">⚠️ HAPUS PAKSA (Berbahaya)</p>
+                                        <p class="text-xs text-red-700 dark:text-red-400">
+                                            Hapus produk + SEMUA transaksi terkait. Laporan keuangan akan berubah!
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 flex flex-col sm:flex-row gap-2">
+                        <button @click="archiveProduct" type="button" class="w-full inline-flex justify-center items-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm">
+                            <span class="material-symbols-outlined text-sm mr-1">archive</span>
+                            Arsipkan (Aman)
+                        </button>
+                        <button @click="confirmForceDelete" type="button" class="w-full inline-flex justify-center items-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:text-sm">
+                            <span class="material-symbols-outlined text-sm mr-1">delete_forever</span>
+                            Hapus Paksa
+                        </button>
+                        <button @click="showConfirmChoiceModal = false" type="button" class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:text-sm dark:bg-gray-600 dark:text-white dark:border-gray-500 dark:hover:bg-gray-500">
+                            Batal
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Force Delete Warning Modal (Double Confirmation) -->
+        <div v-if="showForceDeleteWarning" class="fixed inset-0 z-50 overflow-y-auto">
+            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 transition-opacity" @click="showForceDeleteWarning = false">
+                    <div class="absolute inset-0 bg-gray-900 opacity-75"></div>
+                </div>
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+                <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                    <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <span class="material-symbols-outlined text-red-600">dangerous</span>
+                            </div>
+                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                                <h3 class="text-lg leading-6 font-medium text-red-600 dark:text-red-400">
+                                    Yakin Hapus Paksa?
+                                </h3>
+                                <div class="mt-2">
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                                        Produk <strong>{{ deleteConfirmData?.name }}</strong> dan <strong class="text-red-600">SEMUA transaksi terkait</strong> akan dihapus permanen:
+                                    </p>
+                                    <ul class="mt-2 text-xs text-gray-500 dark:text-gray-400 list-disc list-inside space-y-1">
+                                        <li>Saldo Awal</li>
+                                        <li>Pembelian Bahan Baku</li>
+                                        <li>Pemakaian & Produksi WIP</li>
+                                        <li>Inventory Batches</li>
+                                        <li>Penjualan (jika ada)</li>
+                                    </ul>
+                                    <p class="mt-3 text-sm font-semibold text-red-600">
+                                        ⚠️ Laporan keuangan dan audit trail akan berubah! Tidak dapat dibatalkan!
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button @click="forceDeleteProduct" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
+                            Ya, Hapus Semuanya!
+                        </button>
+                        <button @click="showForceDeleteWarning = false" type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:w-auto sm:text-sm dark:bg-gray-600 dark:text-white dark:border-gray-500 dark:hover:bg-gray-500">
                             Batal
                         </button>
                     </div>
