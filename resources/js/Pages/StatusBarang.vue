@@ -250,7 +250,7 @@ const exportExcel = () => {
                                         </div>
                                     </div>
                                 </td>
-                                <td class="p-3 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700">{{ formatCurrency(product.nilai / (product.stok || 1)) }}/{{ product.satuan }}</td>
+                                <td class=\"p-3 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700\">{{ formatCurrency(product.hpp) }}/{{ product.satuan }}</td>
                                 <td class="p-3 whitespace-nowrap text-sm text-right font-bold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700">{{ formatCurrency(product.nilai) }}</td>
                             </tr>
                             <tr v-if="!products || products.length === 0">

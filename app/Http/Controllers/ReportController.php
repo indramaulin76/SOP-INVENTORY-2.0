@@ -534,17 +534,27 @@ class ReportController extends Controller
             $query->whereRaw('(SELECT COALESCE(SUM(qty_current), 0) FROM inventory_batches WHERE inventory_batches.product_id = products.id) > products.limit_stock');
         }
         
-        $products = $query->get()->map(fn($p) => [
-            'id' => $p->id,
-            'kode_barang' => $p->kode_barang,
-            'nama_barang' => $p->nama_barang,
-            'kategori' => $p->category->nama_kategori ?? '-',
-            'satuan' => $p->unit->singkatan ?? '-',
-            'stok' => $p->current_stock ?? 0,
-            'limit' => $p->limit_stock,
-            'status' => ($p->current_stock ?? 0) <= $p->limit_stock ? 'Rendah' : 'Aman',
-            'nilai' => ($p->current_stock ?? 0) * $p->harga_beli_default,
-        ]);
+        $products = $query->with('inventoryBatches')->get()->map(function($p) {
+            $batches = $p->inventoryBatches;
+            $currentStock = $batches->sum('qty_current');
+            
+            // Calculate weighted average HPP from inventory batches
+            $totalValue = $batches->sum(fn($b) => $b->qty_current * $b->price_per_unit);
+            $avgHpp = $currentStock > 0 ? $totalValue / $currentStock : ($p->harga_beli_default ?? 0);
+            
+            return [
+                'id' => $p->id,
+                'kode_barang' => $p->kode_barang,
+                'nama_barang' => $p->nama_barang,
+                'kategori' => $p->category->nama_kategori ?? '-',
+                'satuan' => $p->unit->singkatan ?? '-',
+                'stok' => $currentStock,
+                'limit' => $p->limit_stock,
+                'status' => $currentStock <= $p->limit_stock ? 'Rendah' : 'Aman',
+                'hpp' => round($avgHpp, 2),
+                'nilai' => round($totalValue, 2),
+            ];
+        });
 
         $totalValue = $products->sum('nilai');
         $lowStockCount = $products->where('status', 'Rendah')->count();
