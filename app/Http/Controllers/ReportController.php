@@ -64,27 +64,28 @@ class ReportController extends Controller
     }
 
     /**
-     * Hapus produk (hard delete dengan cascade)
+     * Hapus produk (dengan pilihan Archive atau Force Delete jika ada constraint)
      * 
      * Menghapus produk beserta semua batch inventory terkait.
-     * Hati-hati: data tidak bisa dikembalikan!
+     * Jika ada constraint, user diberi pilihan Archive atau Force Delete.
      */
     public function deleteProduct(Product $product)
     {
-        // Hard delete with cascade
-        DB::beginTransaction();
         try {
-            // Delete related inventory batches
-            $product->inventoryBatches()->delete();
-            
-            // Force delete the product (bypass soft delete)
-            $product->forceDelete();
-
-            DB::commit();
-            return redirect()->back()->with('success', 'Data barang berhasil dihapus!');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->back()->with('error', 'Gagal menghapus data: ' . $e->getMessage());
+            // Try normal delete first
+            $product->delete();
+            return redirect()->back()->with('success', 'Data barang berhasil dihapus.');
+        } catch (\Illuminate\Database\QueryException $e) {
+            if ($e->getCode() == '23000') {
+                // Kirim sinyal ke Frontend untuk memunculkan Pilihan
+                return redirect()->back()->with('delete_confirmation_needed', [
+                    'id' => $product->id,
+                    'name' => $product->nama_barang,
+                    'message' => 'Produk ini tidak bisa dihapus karena sudah dipakai dalam transaksi (Saldo Awal, Produksi, atau Pembelian). Pilih tindakan:'
+                ]);
+            }
+            // Re-throw other errors so we don't silence unexpected issues
+            throw $e;
         }
     }
 
