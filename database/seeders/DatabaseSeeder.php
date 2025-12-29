@@ -26,7 +26,7 @@ class DatabaseSeeder extends Seeder
         $this->call(MasterDataSeeder::class);
 
         // 2. Dummy Data (OPSIONAL - Uncomment jika butuh data demo)
-        // $this->seedDummyData();
+        $this->seedDummyData();
         
         $this->info('✅ Seeding complete!');
     }
