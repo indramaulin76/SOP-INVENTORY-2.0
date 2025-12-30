@@ -260,24 +260,24 @@ const exportExcel = () => {
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-900 dark:divide-gray-700">
                             <tr v-for="(mutation, index) in movementsWithBalance" :key="index" class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group">
-                                <td class="p-3 text-sm text-gray-600 dark:text-gray-300 font-medium">{{ mutation.tanggal }}</td>
-                                <td class="p-3 text-sm text-gray-800 dark:text-gray-200">{{ mutation.keterangan }}</td>
-                                <td class="p-3 text-sm text-right font-medium">
+                                <td class="p-3 text-sm text-gray-600 dark:text-gray-300 font-medium whitespace-nowrap">{{ mutation.tanggal }}</td>
+                                <td class="p-3 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap min-w-[200px]">{{ mutation.keterangan }}</td>
+                                <td class="p-3 text-sm text-right font-medium whitespace-nowrap">
                                     <span v-if="mutation.masuk > 0" class="text-green-600 dark:text-green-400">
                                         +{{ formatStock(mutation.masuk) }}
                                     </span>
                                     <span v-else class="text-gray-400">-</span>
                                 </td>
-                                <td class="p-3 text-sm text-right font-medium">
+                                <td class="p-3 text-sm text-right font-medium whitespace-nowrap">
                                     <span v-if="mutation.keluar > 0" class="text-red-500 dark:text-red-400">
                                         -{{ formatStock(mutation.keluar) }}
                                     </span>
                                     <span v-else class="text-gray-400">-</span>
                                 </td>
-                                <td class="p-3 text-sm text-right font-bold text-gray-900 dark:text-white bg-gray-50/50 dark:bg-gray-800/50">
+                                <td class="p-3 text-sm text-right font-bold text-gray-900 dark:text-white bg-gray-50/50 dark:bg-gray-800/50 whitespace-nowrap">
                                     {{ formatStock(mutation.saldo) }}
                                 </td>
-                                <td class="p-3 text-sm text-right text-gray-600 dark:text-gray-300">
+                                <td class="p-3 text-sm text-right text-gray-600 dark:text-gray-300 whitespace-nowrap">
                                     {{ formatCurrency(mutation.harga) }}
                                 </td>
                             </tr>

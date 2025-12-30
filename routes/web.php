@@ -48,9 +48,11 @@ Route::middleware('auth')->group(function () {
     // Master Data Resource Routes
     Route::resource('products', \App\Http\Controllers\ProductController::class);
     
-    // Custom Product Routes (Archive & Force Delete)
-    Route::put('/products/{id}/archive', [\App\Http\Controllers\ProductController::class, 'archive'])->name('products.archive');
-    Route::delete('/products/{id}/force-delete', [\App\Http\Controllers\ProductController::class, 'forceDestroy'])->name('products.force-destroy');
+    // Custom Product Routes (Archive & Force Delete) - PROTECTED: Only Pimpinan
+    Route::middleware('role:Pimpinan')->group(function () {
+        Route::put('/products/{id}/archive', [\App\Http\Controllers\ProductController::class, 'archive'])->name('products.archive');
+        Route::delete('/products/{id}/force-delete', [\App\Http\Controllers\ProductController::class, 'forceDestroy'])->name('products.force-destroy');
+    });
     
     Route::resource('suppliers', \App\Http\Controllers\SupplierController::class);
     Route::resource('customers', \App\Http\Controllers\CustomerController::class);
@@ -119,6 +121,9 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/riwayat-stok', [\App\Http\Controllers\ReportController::class, 'riwayatStok'])->name('laporan.riwayat-stok');
 
+        // Laporan Mutasi Stok Bulanan (Monthly Stock Movement Report)
+        Route::get('/mutasi-stok', [\App\Http\Controllers\ReportController::class, 'laporanMutasiStok'])->name('laporan.mutasi-stok');
+
         // Profit Reports - Pimpinan & Admin only
         Route::get('/penjualan-laba', [\App\Http\Controllers\ReportController::class, 'penjualanLaba'])
             ->middleware('role:Pimpinan,Admin')
@@ -164,6 +169,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/export/kartu-stok/excel', [\App\Http\Controllers\ReportExportController::class, 'kartuStokExcel'])->name('laporan.export.kartu-stok.excel');
             Route::get('/export/status-barang/pdf', [\App\Http\Controllers\ReportExportController::class, 'statusBarangPdf'])->name('laporan.export.status-barang.pdf');
             Route::get('/export/status-barang/excel', [\App\Http\Controllers\ReportExportController::class, 'statusBarangExcel'])->name('laporan.export.status-barang.excel');
+            Route::get('/export/mutasi-stok/excel', [\App\Http\Controllers\ReportExportController::class, 'mutasiStokExcel'])->name('laporan.export.mutasi-stok.excel');
         });
     });
 

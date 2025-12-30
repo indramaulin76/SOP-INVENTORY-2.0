@@ -464,6 +464,19 @@ class ReportExportController extends Controller
     }
 
     /**
+     * Export Mutasi Stok to Excel
+     */
+    public function mutasiStokExcel(Request $request)
+    {
+        $month = $request->input('month', now()->month);
+        $year = $request->input('year', now()->year);
+        $periodLabel = \Carbon\Carbon::createFromDate($year, $month, 1)->isoFormat('MMMM_YYYY');
+        
+        $filename = 'mutasi-stok-' . $periodLabel . '.xlsx';
+        return Excel::download(new \App\Exports\MutasiStokExport($request), $filename);
+    }
+
+    /**
      * Get human-readable source label
      */
     private function getSourceLabel(string $source): string

@@ -241,6 +241,10 @@ const toggleDarkMode = () => {
                             <span :class="['material-symbols-outlined mr-3 text-[18px]', $page.url === '/laporan/riwayat-stok' ? 'text-primary' : 'text-gray-400 group-hover:text-primary']">history</span>
                             Riwayat Stok
                         </Link>
+                        <Link href="/laporan/mutasi-stok" :class="['group flex items-center px-3 py-2 text-xs font-medium rounded-md transition-colors ml-3 border-l-2 pl-4', $page.url === '/laporan/mutasi-stok' ? 'text-primary bg-primary/5 dark:bg-primary/10 border-primary' : 'text-gray-500 hover:text-primary hover:bg-gray-50 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-800 border-transparent hover:border-primary']">
+                            <span :class="['material-symbols-outlined mr-3 text-[18px]', $page.url === '/laporan/mutasi-stok' ? 'text-primary' : 'text-gray-400 group-hover:text-primary']">swap_horiz</span>
+                            Mutasi Stok Bulanan
+                        </Link>
                         <!-- Only show profit report for non-karyawan -->
                         <Link v-if="permissions.canViewProfitReports" href="/laporan/penjualan-laba" :class="['group flex items-center px-3 py-2 text-xs font-medium rounded-md transition-colors ml-3 border-l-2 pl-4', $page.url === '/laporan/penjualan-laba' ? 'text-primary bg-primary/5 dark:bg-primary/10 border-primary' : 'text-gray-500 hover:text-primary hover:bg-gray-50 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-800 border-transparent hover:border-primary']">
                             <span :class="['material-symbols-outlined mr-3 text-[18px]', $page.url === '/laporan/penjualan-laba' ? 'text-primary' : 'text-gray-400 group-hover:text-primary']">trending_up</span>

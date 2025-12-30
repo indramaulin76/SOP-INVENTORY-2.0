@@ -56,7 +56,7 @@ class UserController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'role' => $validated['role'],
-            'password' => $validated['password'],
+            'password' => Hash::make($validated['password']),
             'active' => true,
         ]);
 
@@ -82,7 +82,7 @@ class UserController extends Controller
         $user->active = $validated['active'] ?? $user->active;
 
         if (!empty($validated['password'])) {
-            $user->password = $validated['password'];
+            $user->password = Hash::make($validated['password']);
         }
 
         $user->save();

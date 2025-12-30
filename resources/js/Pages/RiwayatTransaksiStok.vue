@@ -415,56 +415,56 @@ const deleteTransaction = (transaction) => {
                         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                             <thead>
                                 <tr>
-                                    <th class="bg-primary text-white font-semibold text-left px-4 py-3 text-xs">Tanggal</th>
-                                    <th class="bg-primary text-white font-semibold text-left px-4 py-3 text-xs">No. Referensi</th>
-                                    <th class="bg-primary text-white font-semibold text-left px-4 py-3 text-xs">Jenis</th>
-                                    <th class="bg-primary text-white font-semibold text-left px-4 py-3 text-xs">Barang</th>
-                                    <th class="bg-primary text-white font-semibold text-center px-4 py-3 text-xs">Masuk</th>
-                                    <th class="bg-primary text-white font-semibold text-center px-4 py-3 text-xs">Keluar</th>
-                                    <th class="bg-primary text-white font-semibold text-center px-4 py-3 text-xs">Saldo</th>
-                                    <th class="bg-primary text-white font-semibold text-right px-4 py-3 text-xs">Harga</th>
-                                    <th v-if="canEditDelete" class="bg-primary text-white font-semibold text-center px-4 py-3 text-xs">Aksi</th>
+                                    <th class="bg-primary text-white font-semibold text-left px-4 py-3 text-xs whitespace-nowrap">Tanggal</th>
+                                    <th class="bg-primary text-white font-semibold text-left px-4 py-3 text-xs whitespace-nowrap">No. Referensi</th>
+                                    <th class="bg-primary text-white font-semibold text-left px-4 py-3 text-xs whitespace-nowrap">Jenis</th>
+                                    <th class="bg-primary text-white font-semibold text-left px-4 py-3 text-xs whitespace-nowrap">Barang</th>
+                                    <th class="bg-primary text-white font-semibold text-center px-4 py-3 text-xs whitespace-nowrap">Masuk</th>
+                                    <th class="bg-primary text-white font-semibold text-center px-4 py-3 text-xs whitespace-nowrap">Keluar</th>
+                                    <th class="bg-primary text-white font-semibold text-center px-4 py-3 text-xs whitespace-nowrap">Saldo</th>
+                                    <th class="bg-primary text-white font-semibold text-right px-4 py-3 text-xs whitespace-nowrap">Harga</th>
+                                    <th v-if="canEditDelete" class="bg-primary text-white font-semibold text-center px-4 py-3 text-xs whitespace-nowrap">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-900 dark:divide-gray-700">
                                 <tr v-for="item in filteredTransactions" :key="item.id" class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                                    <td class="p-4 text-sm text-gray-600 dark:text-gray-300">
+                                    <td class="p-4 text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">
                                         {{ item.tanggal }}
                                     </td>
-                                    <td class="p-4 text-sm">
+                                    <td class="p-4 text-sm whitespace-nowrap">
                                         <span class="font-mono text-primary">{{ item.no_referensi || '-' }}</span>
                                     </td>
-                                    <td class="p-4">
+                                    <td class="p-4 whitespace-nowrap">
                                         <span :class="['inline-flex items-center rounded-md px-2 py-1 text-xs font-medium', getBadgeClass(item.jenis_transaksi)]">
                                             <span class="material-symbols-outlined text-[14px] mr-1">{{ getIcon(item.jenis_transaksi) }}</span>
                                             {{ item.jenis_transaksi }}
                                         </span>
                                     </td>
-                                    <td class="p-4">
+                                    <td class="p-4 min-w-[200px]">
                                         <div class="flex flex-col">
                                             <span class="text-sm font-medium text-gray-900 dark:text-white">{{ item.nama_barang }}</span>
                                             <span class="text-xs text-gray-500">{{ item.kode_barang }} • {{ item.kategori }}</span>
                                         </div>
                                     </td>
-                                    <td class="p-4 text-center">
+                                    <td class="p-4 text-center whitespace-nowrap">
                                         <span v-if="item.masuk > 0" class="text-green-600 dark:text-green-400 font-semibold">
                                             +{{ formatStock(item.masuk) }} {{ item.satuan }}
                                         </span>
                                         <span v-else class="text-gray-400">-</span>
                                     </td>
-                                    <td class="p-4 text-center">
+                                    <td class="p-4 text-center whitespace-nowrap">
                                         <span v-if="item.keluar > 0" class="text-red-600 dark:text-red-400 font-semibold">
                                             -{{ formatStock(item.keluar) }} {{ item.satuan }}
                                         </span>
                                         <span v-else class="text-gray-400">-</span>
                                     </td>
-                                    <td class="p-4 text-center text-sm font-medium text-gray-900 dark:text-white">
+                                    <td class="p-4 text-center text-sm font-medium text-gray-900 dark:text-white whitespace-nowrap">
                                         {{ formatStock(item.saldo) }} {{ item.satuan }}
                                     </td>
-                                    <td class="p-4 text-right text-sm text-gray-600 dark:text-gray-300">
+                                    <td class="p-4 text-right text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">
                                         {{ formatCurrency(item.harga_satuan || 0) }}
                                     </td>
-                                    <td v-if="canEditDelete" class="p-4 text-center">
+                                    <td v-if="canEditDelete" class="p-4 text-center whitespace-nowrap">
                                         <div class="flex items-center justify-center gap-1">
                                             <button 
                                                 @click="openEditModal(item)"

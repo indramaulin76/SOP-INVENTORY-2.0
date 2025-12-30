@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -22,15 +23,13 @@ class AuthController extends Controller
 
     /**
      * Handle an incoming authentication request.
+     * 
+     * SECURITY: Uses LoginRequest with built-in rate limiting (5 attempts max)
+     * to prevent brute force attacks.
      */
-    public function store(Request $request)
+    public function store(LoginRequest $request)
     {
-        $request->validate([
-            'email' => ['required', 'string', 'email'],
-            'password' => ['required', 'string'],
-        ]);
-
-        // Check if user exists and is active
+        // Check if user exists and is active BEFORE authentication
         $user = \App\Models\User::where('email', $request->email)->first();
         
         if ($user && !$user->active) {
@@ -39,11 +38,8 @@ class AuthController extends Controller
             ]);
         }
 
-        if (!Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
-            throw ValidationException::withMessages([
-                'email' => 'Email atau password salah.',
-            ]);
-        }
+        // Authenticate with rate limiting protection
+        $request->authenticate();
 
         $request->session()->regenerate();
 

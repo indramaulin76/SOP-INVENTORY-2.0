@@ -17,6 +17,8 @@ export default {
                 "background-light": "#f8f7f6",
                 "background-dark": "#221c10",
                 "stone-custom": "#897d61",
+                "surface-light": "#ffffff",
+                "surface-dark": "#2d261e",
             },
             fontFamily: {
                 "display": ["Work Sans", "sans-serif"],

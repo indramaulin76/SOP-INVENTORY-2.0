@@ -207,45 +207,45 @@ const exportExcel = () => {
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead>
                             <tr>
-                                <th class="bg-gray-50 dark:bg-gray-800 text-left px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300">Tanggal</th>
-                                <th class="bg-gray-50 dark:bg-gray-800 text-left px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300">No. Bukti</th>
-                                <th class="bg-gray-50 dark:bg-gray-800 text-left px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300">Customer</th>
-                                <th class="bg-gray-50 dark:bg-gray-800 text-left px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300">Barang</th>
-                                <th class="bg-gray-50 dark:bg-gray-800 text-center px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300">Qty</th>
-                                <th class="bg-gray-50 dark:bg-gray-800 text-right px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300">Harga Jual</th>
-                                <th class="bg-gray-50 dark:bg-gray-800 text-right px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300">Revenue</th>
-                                <th class="bg-gray-50 dark:bg-gray-800 text-right px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300">HPP</th>
-                                <th class="bg-gray-50 dark:bg-gray-800 text-right px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300">Laba Kotor</th>
-                                <th class="bg-gray-50 dark:bg-gray-800 text-center px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300">Margin</th>
+                                <th class="bg-gray-50 dark:bg-gray-800 text-left px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300 whitespace-nowrap">Tanggal</th>
+                                <th class="bg-gray-50 dark:bg-gray-800 text-left px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300 whitespace-nowrap">No. Bukti</th>
+                                <th class="bg-gray-50 dark:bg-gray-800 text-left px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300 whitespace-nowrap">Customer</th>
+                                <th class="bg-gray-50 dark:bg-gray-800 text-left px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300 whitespace-nowrap">Barang</th>
+                                <th class="bg-gray-50 dark:bg-gray-800 text-center px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300 whitespace-nowrap">Qty</th>
+                                <th class="bg-gray-50 dark:bg-gray-800 text-right px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300 whitespace-nowrap">Harga Jual</th>
+                                <th class="bg-gray-50 dark:bg-gray-800 text-right px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300 whitespace-nowrap">Revenue</th>
+                                <th class="bg-gray-50 dark:bg-gray-800 text-right px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300 whitespace-nowrap">HPP</th>
+                                <th class="bg-gray-50 dark:bg-gray-800 text-right px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300 whitespace-nowrap">Laba Kotor</th>
+                                <th class="bg-gray-50 dark:bg-gray-800 text-center px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300 whitespace-nowrap">Margin</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-900 dark:divide-gray-700">
                             <tr v-for="sale in sales" :key="sale.id" class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                                <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ sale.tanggal }}</td>
-                                <td class="px-4 py-3 text-sm font-mono text-primary">{{ sale.nomor_bukti }}</td>
-                                <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ sale.customer }}</td>
-                                <td class="px-4 py-3">
+                                <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">{{ sale.tanggal }}</td>
+                                <td class="px-4 py-3 text-sm font-mono text-primary whitespace-nowrap">{{ sale.nomor_bukti }}</td>
+                                <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">{{ sale.customer }}</td>
+                                <td class="px-4 py-3 min-w-[200px]">
                                     <div class="flex flex-col">
                                         <span class="text-sm font-medium text-gray-900 dark:text-white">{{ sale.nama_barang }}</span>
-                                        <span class="text-xs text-gray-500">{{ sale.kode_barang }}</span>
+                                        <span class="text-xs text-gray-500 whitespace-nowrap">{{ sale.kode_barang }}</span>
                                     </div>
                                 </td>
-                                <td class="px-4 py-3 text-center text-sm text-gray-600 dark:text-gray-300">
+                                <td class="px-4 py-3 text-center text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">
                                     {{ parseFloat(sale.quantity).toLocaleString('id-ID') }} {{ sale.satuan }}
                                 </td>
-                                <td class="px-4 py-3 text-right text-sm text-gray-600 dark:text-gray-300">
+                                <td class="px-4 py-3 text-right text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">
                                     {{ formatCurrency(sale.harga_jual) }}
                                 </td>
-                                <td class="px-4 py-3 text-right text-sm font-semibold text-blue-600 dark:text-blue-400">
+                                <td class="px-4 py-3 text-right text-sm font-semibold text-blue-600 dark:text-blue-400 whitespace-nowrap">
                                     {{ formatCurrency(sale.revenue) }}
                                 </td>
-                                <td class="px-4 py-3 text-right text-sm text-red-600 dark:text-red-400">
+                                <td class="px-4 py-3 text-right text-sm text-red-600 dark:text-red-400 whitespace-nowrap">
                                     {{ formatCurrency(sale.cogs) }}
                                 </td>
-                                <td class="px-4 py-3 text-right text-sm font-semibold text-green-600 dark:text-green-400">
+                                <td class="px-4 py-3 text-right text-sm font-semibold text-green-600 dark:text-green-400 whitespace-nowrap">
                                     {{ formatCurrency(sale.gross_profit) }}
                                 </td>
-                                <td class="px-4 py-3 text-center">
+                                <td class="px-4 py-3 text-center whitespace-nowrap">
                                     <span :class="[
                                         'px-2 py-1 rounded-full text-xs font-medium',
                                         sale.profit_margin >= 30 ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300' :
@@ -287,27 +287,27 @@ const exportExcel = () => {
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead>
                             <tr>
-                                <th class="bg-gray-50 dark:bg-gray-800 text-left px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300">Kode</th>
-                                <th class="bg-gray-50 dark:bg-gray-800 text-left px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300">Nama Barang</th>
-                                <th class="bg-gray-50 dark:bg-gray-800 text-center px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300">Total Qty</th>
-                                <th class="bg-gray-50 dark:bg-gray-800 text-right px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300">Total Revenue</th>
-                                <th class="bg-gray-50 dark:bg-gray-800 text-right px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300">Total HPP</th>
-                                <th class="bg-gray-50 dark:bg-gray-800 text-right px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300">Total Profit</th>
+                                <th class="bg-gray-50 dark:bg-gray-800 text-left px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300 whitespace-nowrap">Kode</th>
+                                <th class="bg-gray-50 dark:bg-gray-800 text-left px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300 whitespace-nowrap">Nama Barang</th>
+                                <th class="bg-gray-50 dark:bg-gray-800 text-center px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300 whitespace-nowrap">Total Qty</th>
+                                <th class="bg-gray-50 dark:bg-gray-800 text-right px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300 whitespace-nowrap">Total Revenue</th>
+                                <th class="bg-gray-50 dark:bg-gray-800 text-right px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300 whitespace-nowrap">Total HPP</th>
+                                <th class="bg-gray-50 dark:bg-gray-800 text-right px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300 whitespace-nowrap">Total Profit</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-900 dark:divide-gray-700">
                             <tr v-for="(product, index) in productAnalysis" :key="product.kode_barang" class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                                <td class="px-4 py-3 text-sm font-mono text-primary">{{ product.kode_barang }}</td>
-                                <td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
+                                <td class="px-4 py-3 text-sm font-mono text-primary whitespace-nowrap">{{ product.kode_barang }}</td>
+                                <td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white min-w-[200px]">
                                     <div class="flex items-center">
                                         <span v-if="index < 3" class="material-symbols-outlined text-amber-500 mr-2">emoji_events</span>
                                         {{ product.nama_barang }}
                                     </div>
                                 </td>
-                                <td class="px-4 py-3 text-center text-sm text-gray-600 dark:text-gray-300">{{ parseFloat(product.total_qty).toLocaleString('id-ID') }}</td>
-                                <td class="px-4 py-3 text-right text-sm text-blue-600 dark:text-blue-400">{{ formatCurrency(product.total_revenue) }}</td>
-                                <td class="px-4 py-3 text-right text-sm text-red-600 dark:text-red-400">{{ formatCurrency(product.total_cogs) }}</td>
-                                <td class="px-4 py-3 text-right text-sm font-semibold text-green-600 dark:text-green-400">{{ formatCurrency(product.total_profit) }}</td>
+                                <td class="px-4 py-3 text-center text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">{{ parseFloat(product.total_qty).toLocaleString('id-ID') }}</td>
+                                <td class="px-4 py-3 text-right text-sm text-blue-600 dark:text-blue-400 whitespace-nowrap">{{ formatCurrency(product.total_revenue) }}</td>
+                                <td class="px-4 py-3 text-right text-sm text-red-600 dark:text-red-400 whitespace-nowrap">{{ formatCurrency(product.total_cogs) }}</td>
+                                <td class="px-4 py-3 text-right text-sm font-semibold text-green-600 dark:text-green-400 whitespace-nowrap">{{ formatCurrency(product.total_profit) }}</td>
                             </tr>
                         </tbody>
                     </table>

@@ -573,6 +573,201 @@ class ReportController extends Controller
     }
 
     /**
+     * Laporan Mutasi Stok Bulanan - Monthly Stock Movement Report
+     * 
+     * Features:
+     * - Auto carry-forward: opening balance from previous month's closing
+     * - Dual valuation: HPP for incoming, both HPP & selling price for outgoing
+     * - Filter by month/year and category
+     */
+    public function laporanMutasiStok(Request $request)
+    {
+        // Get filter parameters
+        $month = $request->input('month', now()->month);
+        $year = $request->input('year', now()->year);
+        $categoryId = $request->category_id;
+
+        // Calculate period boundaries
+        $periodStart = \Carbon\Carbon::createFromDate($year, $month, 1)->startOfMonth();
+        $periodEnd = \Carbon\Carbon::createFromDate($year, $month, 1)->endOfMonth();
+
+        // Get categories for filter dropdown
+        $categories = \App\Models\Category::where('nama_kategori', '!=', 'Kemasan')
+            ->orderBy('nama_kategori')
+            ->get(['id', 'nama_kategori']);
+
+        // Build product query
+        $productQuery = Product::with(['category', 'unit']);
+        if ($categoryId) {
+            $productQuery->where('category_id', $categoryId);
+        }
+        $products = $productQuery->get();
+
+        // Calculate stock movement for each product
+        $reportData = [];
+        $inventoryService = app(\App\Services\InventoryService::class);
+
+        foreach ($products as $product) {
+            $productId = $product->id;
+
+            // 1. OPENING BALANCE (Saldo Awal)
+            // Sum all incoming batches BEFORE period start
+            $openingIncoming = InventoryBatch::where('product_id', $productId)
+                ->where('date_in', '<', $periodStart)
+                ->sum('qty_initial');
+
+            // Sum all outgoing BEFORE period start
+            $openingOutgoing = 0;
+
+            // Usage from raw materials
+            $openingOutgoing += \App\Models\UsageRawMaterialItem::where('product_id', $productId)
+                ->whereHas('usageRawMaterial', fn($q) => $q->where('tanggal', '<', $periodStart))
+                ->sum('quantity');
+
+            // Usage from WIP
+            $openingOutgoing += \App\Models\UsageWipItem::where('product_id', $productId)
+                ->whereHas('usageWip', fn($q) => $q->where('tanggal', '<', $periodStart))
+                ->sum('quantity');
+
+            // Sales
+            $openingOutgoing += \App\Models\SalesFinishedGoodsItem::where('product_id', $productId)
+                ->whereHas('salesFinishedGoods', fn($q) => $q->where('tanggal', '<', $periodStart))
+                ->sum('quantity');
+
+            // Production materials usage
+            $openingOutgoing += \App\Models\FinishedGoodsProductionMaterial::where('product_id', $productId)
+                ->whereHas('finishedGoodsProduction', fn($q) => $q->where('tanggal', '<', $periodStart))
+                ->sum('quantity');
+
+            $openingBalance = $openingIncoming - $openingOutgoing;
+
+            // 2. INCOMING DURING PERIOD (Masuk)
+            $incomingBatches = InventoryBatch::where('product_id', $productId)
+                ->whereBetween('date_in', [$periodStart, $periodEnd])
+                ->get();
+
+            $incomingQty = $incomingBatches->sum('qty_initial');
+            $incomingValue = $incomingBatches->sum(fn($b) => $b->qty_initial * $b->price_per_unit);
+
+            // 3. OUTGOING DURING PERIOD (Keluar)
+            $outgoingQty = 0;
+            $outgoingValueHPP = 0;
+            $outgoingValueJual = 0;
+
+            // Usage from raw materials
+            $usageItems = \App\Models\UsageRawMaterialItem::where('product_id', $productId)
+                ->whereHas('usageRawMaterial', fn($q) => $q->whereBetween('tanggal', [$periodStart, $periodEnd]))
+                ->get();
+            foreach ($usageItems as $item) {
+                $outgoingQty += $item->quantity;
+                $outgoingValueHPP += $item->quantity * $item->harga; // HPP
+                $outgoingValueJual += $item->quantity * $item->harga; // Same as HPP for usage
+            }
+
+            // Usage from WIP
+            $wipUsageItems = \App\Models\UsageWipItem::where('product_id', $productId)
+                ->whereHas('usageWip', fn($q) => $q->whereBetween('tanggal', [$periodStart, $periodEnd]))
+                ->get();
+            foreach ($wipUsageItems as $item) {
+                $outgoingQty += $item->quantity;
+                $outgoingValueHPP += $item->quantity * $item->harga;
+                $outgoingValueJual += $item->quantity * $item->harga;
+            }
+
+            // Sales (HPP vs Selling Price)
+            $salesItems = \App\Models\SalesFinishedGoodsItem::where('product_id', $productId)
+                ->whereHas('salesFinishedGoods', fn($q) => $q->whereBetween('tanggal', [$periodStart, $periodEnd]))
+                ->get();
+            foreach ($salesItems as $item) {
+                $outgoingQty += $item->quantity;
+                $outgoingValueHPP += $item->total_cogs; // HPP (COGS)
+                $outgoingValueJual += $item->jumlah; // Selling price (revenue)
+            }
+
+            // Production materials
+            $prodMatItems = \App\Models\FinishedGoodsProductionMaterial::where('product_id', $productId)
+                ->whereHas('finishedGoodsProduction', fn($q) => $q->whereBetween('tanggal', [$periodStart, $periodEnd]))
+                ->get();
+            foreach ($prodMatItems as $item) {
+                $outgoingQty += $item->quantity;
+                $outgoingValueHPP += $item->quantity * $item->cost_per_unit;
+                $outgoingValueJual += $item->quantity * $item->cost_per_unit;
+            }
+
+            // 4. CLOSING BALANCE (Saldo Akhir)
+            $closingBalance = $openingBalance + $incomingQty - $outgoingQty;
+
+            // Calculate average price for closing value
+            $avgPrice = $inventoryService->getAveragePrice($productId);
+            $closingValue = $closingBalance * $avgPrice;
+
+            // Skip products with no movement
+            if ($openingBalance == 0 && $incomingQty == 0 && $outgoingQty == 0) {
+                continue;
+            }
+
+            $reportData[] = [
+                'id' => $product->id,
+                'kode_barang' => $product->kode_barang,
+                'nama_barang' => $product->nama_barang,
+                'kategori' => $product->category->nama_kategori ?? '-',
+                'satuan' => $product->unit->singkatan ?? '-',
+                'saldo_awal' => max(0, $openingBalance),
+                'masuk_qty' => $incomingQty,
+                'masuk_nilai' => $incomingValue,
+                'keluar_qty' => $outgoingQty,
+                'keluar_nilai_hpp' => $outgoingValueHPP,
+                'keluar_nilai_jual' => $outgoingValueJual,
+                'saldo_akhir_qty' => max(0, $closingBalance),
+                'saldo_akhir_nilai' => max(0, $closingValue),
+            ];
+        }
+
+        // Calculate summary totals
+        $summary = [
+            'totalProducts' => count($reportData),
+            'totalIncomingValue' => collect($reportData)->sum('masuk_nilai'),
+            'totalOutgoingValueHPP' => collect($reportData)->sum('keluar_nilai_hpp'),
+            'totalOutgoingValueJual' => collect($reportData)->sum('keluar_nilai_jual'),
+            'totalClosingValue' => collect($reportData)->sum('saldo_akhir_nilai'),
+        ];
+
+        // Available months for dropdown
+        $availableMonths = [
+            ['value' => 1, 'label' => 'Januari'],
+            ['value' => 2, 'label' => 'Februari'],
+            ['value' => 3, 'label' => 'Maret'],
+            ['value' => 4, 'label' => 'April'],
+            ['value' => 5, 'label' => 'Mei'],
+            ['value' => 6, 'label' => 'Juni'],
+            ['value' => 7, 'label' => 'Juli'],
+            ['value' => 8, 'label' => 'Agustus'],
+            ['value' => 9, 'label' => 'September'],
+            ['value' => 10, 'label' => 'Oktober'],
+            ['value' => 11, 'label' => 'November'],
+            ['value' => 12, 'label' => 'Desember'],
+        ];
+
+        // Generate year range (current year ± 2 years)
+        $currentYear = now()->year;
+        $availableYears = range($currentYear - 2, $currentYear + 1);
+
+        return Inertia::render('LaporanMutasiStok', [
+            'reportData' => $reportData,
+            'summary' => $summary,
+            'categories' => $categories,
+            'availableMonths' => $availableMonths,
+            'availableYears' => $availableYears,
+            'filters' => [
+                'month' => (int) $month,
+                'year' => (int) $year,
+                'category_id' => $categoryId,
+            ],
+            'periodLabel' => \Carbon\Carbon::createFromDate($year, $month, 1)->isoFormat('MMMM YYYY'),
+        ]);
+    }
+
+    /**
      * Helper to get source label
      */
     private function getSourceLabel(?string $source): string
