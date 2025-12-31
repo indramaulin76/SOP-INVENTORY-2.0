@@ -1,5 +1,23 @@
 services:
-  # 1. PHP Application
+  # 1. MySQL Database
+  db:
+    image: mysql:8.0
+    container_name: sae-bakery-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-sae_inventory}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_password}
+      MYSQL_USER: ${DB_USERNAME:-indra}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-indra123}
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "3307:3306" # Port 3307 di host untuk avoid conflict
+    networks:
+      - sae-network
+    command: --default-authentication-plugin=mysql_native_password
+
+  # 2. PHP Application
   app:
     build:
       context: .
@@ -16,9 +34,11 @@ services:
       - APP_ENV=${APP_ENV:-production}
       - APP_DEBUG=${APP_DEBUG:-false}
     networks:
-      - jaringan-pusat
+      - sae-network
+    depends_on:
+      - db
 
-  # 2. Nginx Web Server
+  # 3. Nginx Web Server
   web:
     image: nginx:alpine
     container_name: sae-bakery-web
@@ -30,14 +50,16 @@ services:
       - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
       - build_assets:/var/www/public/build
     networks:
-      - jaringan-pusat
+      - sae-network
     depends_on:
       - app
 
 volumes:
+  db_data:
+    driver: local
   build_assets:
     driver: local
 
 networks:
-  jaringan-pusat:
-    external: true
+  sae-network:
+    driver: bridge
