@@ -13,10 +13,10 @@ services:
       - ./bootstrap/cache:/var/www/bootstrap/cache
       - build_assets:/var/www/public/build
     environment:
-      - APP_ENV=local
-      - APP_DEBUG=true
+      - APP_ENV=${APP_ENV:-production}
+      - APP_DEBUG=${APP_DEBUG:-false}
     networks:
-      - jaringan-pusat # <--- Gabung ke jaringan pusat
+      - jaringan-pusat
 
   # 2. Nginx Web Server
   web:
@@ -24,23 +24,20 @@ services:
     container_name: sae-bakery-web
     restart: unless-stopped
     ports:
-      - "8000:80" # <--- Ganti ke 8000 (karena 8080 dipakai phpMyAdmin)
+      - "8000:80"
     volumes:
       - ./:/var/www
       - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
       - build_assets:/var/www/public/build
     networks:
-      - jaringan-pusat # <--- Gabung ke jaringan pusat
+      - jaringan-pusat
     depends_on:
       - app
-
-# Service 'db' KITA HAPUS karena pakai Master-DB
 
 volumes:
   build_assets:
     driver: local
 
 networks:
-  # Kita panggil jaringan luar yang sudah kita buat
   jaringan-pusat:
     external: true

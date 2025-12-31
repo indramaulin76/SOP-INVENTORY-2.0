@@ -14,9 +14,9 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // Matikan dulu paksaan HTTPS ini karena kita di localhost tanpa SSL
-        // if($this->app->environment('production')) {
-        //     URL::forceScheme('https');
-        // }
+        // Force HTTPS in production environment
+        if ($this->app->environment('production')) {
+            URL::forceScheme('https');
+        }
     }
 }
